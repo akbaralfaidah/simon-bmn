@@ -3,23 +3,39 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Role;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     /**
      * Seed the application's database.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Pastikan role sudah terbuat
+        $roleKoordinator = Role::firstOrCreate(['name' => 'Koordinator BMN', 'description' => 'Akses penuh BMN']);
+        $rolePegawai = Role::firstOrCreate(['name' => 'Pegawai', 'description' => 'Akses peminjam BMN']);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Akun Koordinator (Akbar Alfaidah)
+        $akbar = User::updateOrCreate(
+            ['email' => 'akbar@gakkum.id'],
+            [
+                'name' => 'Akbar Alfaidah',
+                'password' => Hash::make('password'),
+            ]
+        );
+        $akbar->roleAssignments()->firstOrCreate(['role_id' => $roleKoordinator->id]);
+
+        // Akun Pegawai Biasa
+        $budi = User::updateOrCreate(
+            ['email' => 'budi@gakkum.id'],
+            [
+                'name' => 'Budi Santoso',
+                'password' => Hash::make('password'),
+            ]
+        );
+        $budi->roleAssignments()->firstOrCreate(['role_id' => $rolePegawai->id]);
     }
 }
