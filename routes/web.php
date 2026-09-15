@@ -39,6 +39,11 @@ Route::middleware(['auth', 'active'])->group(function () {
     
     // QR Code BMN
     Route::get('/assets/{asset}/qrcode', [\App\Http\Controllers\QrCodeController::class, 'show'])->name('assets.qrcode');
+    
+    // Inventory (Stock Opname)
+    Route::post('/inventory/sessions', [\App\Http\Controllers\InventoryController::class, 'store'])->name('inventory.store');
+    Route::post('/inventory/items/{item}/check', [\App\Http\Controllers\InventoryController::class, 'checkItem'])->name('inventory.check');
+    Route::post('/inventory/sessions/{session}/close', [\App\Http\Controllers\InventoryController::class, 'closeSession'])->name('inventory.close');
 });
 
 Route::get('/pending', function () {
