@@ -13,14 +13,18 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', 'Figtree', ...defaultTheme.fontFamily.sans],
             },
             colors: {
-                primary: '#015850',
-                accent: '#F77A04',
-                dark: '#1E1935',
-                info: '#0A7DEF',
-                soft: '#739ABB',
+                brand: {
+                    primary: '#015850', // Forest Teal
+                    primaryLight: '#017A6F',
+                    primaryDark: '#013D38',
+                    secondary: '#F77A04', // Warm Amber
+                    secondaryLight: '#F99B41',
+                    secondaryDark: '#C76102',
+                    informative: '#0A7DEF', // Cerulean
+                },
             },
         },
     },
