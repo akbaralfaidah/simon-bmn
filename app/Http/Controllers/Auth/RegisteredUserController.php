@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\OrganizationUnit;
+use App\Models\EmployeeProfile;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +23,10 @@ class RegisteredUserController extends Controller
      */
     public function create(): Response
     {
-        return Inertia::render('Auth/Register');
+        $units = OrganizationUnit::all();
+        return Inertia::render('Auth/Register', [
+            'units' => $units
+        ]);
     }
 
     /**
@@ -35,12 +40,19 @@ class RegisteredUserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'unit_id' => 'required|exists:organization_units,id',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'status' => 'pending',
+        ]);
+
+        EmployeeProfile::create([
+            'user_id' => $user->id,
+            'unit_id' => $request->unit_id,
         ]);
 
         event(new Registered($user));
