@@ -44,6 +44,17 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/inventory/sessions', [\App\Http\Controllers\InventoryController::class, 'store'])->name('inventory.store');
     Route::post('/inventory/items/{item}/check', [\App\Http\Controllers\InventoryController::class, 'checkItem'])->name('inventory.check');
     Route::post('/inventory/sessions/{session}/close', [\App\Http\Controllers\InventoryController::class, 'closeSession'])->name('inventory.close');
+    
+    // Maintenance (Perawatan)
+    Route::post('/maintenance', [\App\Http\Controllers\MaintenanceController::class, 'store'])->name('maintenance.store');
+    
+    // Disposal (Penghapusan)
+    Route::post('/assets/{asset}/disposal', [\App\Http\Controllers\DisposalController::class, 'propose'])->name('disposal.propose');
+    Route::post('/disposals/{disposal}/approve', [\App\Http\Controllers\DisposalController::class, 'approve'])->name('disposal.approve');
+    
+    // SPIP BMN
+    Route::get('/spip', [\App\Http\Controllers\SpipController::class, 'index'])->name('spip.index');
+    Route::post('/spip', [\App\Http\Controllers\SpipController::class, 'store'])->name('spip.store');
 });
 
 Route::get('/pending', function () {
