@@ -1,0 +1,12 @@
+<?php
+$models = [
+    'LoanRequest' => "<?php\n\nnamespace App\Models;\n\nuse Illuminate\Database\Eloquent\Model;\nuse Illuminate\Database\Eloquent\Relations\BelongsTo;\nuse Illuminate\Database\Eloquent\Relations\HasMany;\n\nclass LoanRequest extends Model\n{\n    protected \$guarded = [];\n\n    public function user(): BelongsTo\n    {\n        return \$this->belongsTo(User::class);\n    }\n\n    public function coordinator(): BelongsTo\n    {\n        return \$this->belongsTo(User::class, 'coordinator_id');\n    }\n\n    public function items(): HasMany\n    {\n        return \$this->hasMany(LoanItem::class);\n    }\n}\n",
+    'LoanItem' => "<?php\n\nnamespace App\Models;\n\nuse Illuminate\Database\Eloquent\Model;\nuse Illuminate\Database\Eloquent\Relations\BelongsTo;\nuse Illuminate\Database\Eloquent\Relations\HasOne;\n\nclass LoanItem extends Model\n{\n    protected \$guarded = [];\n\n    public function request(): BelongsTo\n    {\n        return \$this->belongsTo(LoanRequest::class, 'loan_request_id');\n    }\n\n    public function asset(): BelongsTo\n    {\n        return \$this->belongsTo(Asset::class);\n    }\n\n    public function reservation(): HasOne\n    {\n        return \$this->hasOne(Reservation::class);\n    }\n}\n",
+    'Reservation' => "<?php\n\nnamespace App\Models;\n\nuse Illuminate\Database\Eloquent\Model;\nuse Illuminate\Database\Eloquent\Relations\BelongsTo;\n\nclass Reservation extends Model\n{\n    protected \$guarded = [];\n\n    protected \$casts = [\n        'start_date' => 'datetime',\n        'end_date' => 'datetime',\n    ];\n\n    public function asset(): BelongsTo\n    {\n        return \$this->belongsTo(Asset::class);\n    }\n\n    public function loanItem(): BelongsTo\n    {\n        return \$this->belongsTo(LoanItem::class);\n    }\n}\n",
+    'Bast' => "<?php\n\nnamespace App\Models;\n\nuse Illuminate\Database\Eloquent\Model;\nuse Illuminate\Database\Eloquent\Relations\MorphTo;\nuse Illuminate\Database\Eloquent\Relations\BelongsTo;\n\nclass Bast extends Model\n{\n    protected \$guarded = [];\n\n    public function reference(): MorphTo\n    {\n        return \$this->morphTo();\n    }\n\n    public function issuer(): BelongsTo\n    {\n        return \$this->belongsTo(User::class, 'issued_by');\n    }\n\n    public function receiver(): BelongsTo\n    {\n        return \$this->belongsTo(User::class, 'received_by');\n    }\n}\n"
+];
+
+foreach ($models as $name => $content) {
+    file_put_contents("c:\\laragon\\www\\bmn-gakkum-jambi\\app\\Models\\$name.php", $content);
+}
+echo "Done";

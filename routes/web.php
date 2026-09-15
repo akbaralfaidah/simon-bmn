@@ -24,6 +24,14 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     Route::resource('assets', \App\Http\Controllers\AssetController::class);
+    
+    // Loans
+    Route::get('/loans/create', [\App\Http\Controllers\LoanController::class, 'create'])->name('loans.create');
+    Route::post('/loans', [\App\Http\Controllers\LoanController::class, 'store'])->name('loans.store');
+    Route::get('/loans/approvals', [\App\Http\Controllers\LoanController::class, 'approvals'])->name('loans.approvals');
+    Route::post('/loans/{loan}/approve', [\App\Http\Controllers\LoanController::class, 'approve'])->name('loans.approve');
+    Route::get('/basts/{bast}/print', [\App\Http\Controllers\LoanController::class, 'printBast'])->name('basts.print');
+    Route::post('/loans/{loan}/return', [\App\Http\Controllers\LoanController::class, 'return'])->name('loans.return');
 });
 
 Route::get('/pending', function () {
