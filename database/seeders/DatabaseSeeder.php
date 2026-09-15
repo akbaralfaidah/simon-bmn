@@ -39,5 +39,8 @@ class DatabaseSeeder extends Seeder
             ]
         );
         $budi->roleAssignments()->firstOrCreate(['role_id' => $rolePegawai->id]);
+
+        // Import aset dari data Excel
+        $this->call(AssetSeeder::class);
     }
 }

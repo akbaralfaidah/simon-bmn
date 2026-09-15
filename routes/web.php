@@ -13,7 +13,21 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $totalAssets = \App\Models\Asset::count();
+    $kondisiBaik = \App\Models\Asset::where('condition', 'Baik')->count();
+    $kondisiRusak = \App\Models\Asset::where('condition', '!=', 'Baik')->count();
+    $categories = \App\Models\AssetCategory::withCount('assets')->get();
+    $totalValue = \App\Models\Asset::sum('value');
+
+    return Inertia::render('Dashboard', [
+        'stats' => [
+            'total' => $totalAssets,
+            'kondisi_baik' => $kondisiBaik,
+            'kondisi_rusak' => $kondisiRusak,
+            'total_value' => $totalValue,
+        ],
+        'categories' => $categories,
+    ]);
 })->middleware(['auth', 'verified', 'active'])->name('dashboard');
 
 Route::middleware(['auth', 'active'])->group(function () {
