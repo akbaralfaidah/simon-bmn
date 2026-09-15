@@ -41,4 +41,15 @@ class User extends Authenticatable
     {
         return $this->hasMany(RoleAssignment::class);
     }
+
+    public function hasRole(string|array $roles): bool
+    {
+        if ($this->status !== 'active') {
+            return false;
+        }
+
+        return $this->roleAssignments()->whereHas('role', function ($query) use ($roles) {
+            $query->whereIn('name', (array) $roles);
+        })->exists();
+    }
 }
