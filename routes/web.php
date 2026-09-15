@@ -32,6 +32,13 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::post('/loans/{loan}/approve', [\App\Http\Controllers\LoanController::class, 'approve'])->name('loans.approve');
     Route::get('/basts/{bast}/print', [\App\Http\Controllers\LoanController::class, 'printBast'])->name('basts.print');
     Route::post('/loans/{loan}/return', [\App\Http\Controllers\LoanController::class, 'return'])->name('loans.return');
+    
+    // Custody (Penetapan Jangka Panjang)
+    Route::post('/assets/{asset}/assign', [\App\Http\Controllers\CustodyController::class, 'assign'])->name('custody.assign');
+    Route::post('/custody/{assignment}/revoke', [\App\Http\Controllers\CustodyController::class, 'revoke'])->name('custody.revoke');
+    
+    // QR Code BMN
+    Route::get('/assets/{asset}/qrcode', [\App\Http\Controllers\QrCodeController::class, 'show'])->name('assets.qrcode');
 });
 
 Route::get('/pending', function () {
