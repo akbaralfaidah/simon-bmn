@@ -1,0 +1,66 @@
+Rancang UI/UX high-fidelity website responsif bernama SIMON — Sistem Informasi Barang Milik Negara, untuk pengelolaan BMN Balai Penegakan Hukum Lingkungan Hidup Jambi. Seluruh teks antarmuka wajib berbahasa Indonesia yang jelas, ramah, profesional, dan konsisten.
+
+KONTEKS PRODUK
+Pengguna bekerja di Balai Jambi, Seksi Wilayah I Medan, dan Seksi Wilayah II Palembang. Prioritas produk adalah kemudahan mencari barang, meminjam, memeriksa kondisi, mengelola penanggung jawab, dan menyelesaikan administrasi. Dashboard harus mengutamakan pekerjaan yang membutuhkan tindakan. Gunakan identitas visual yang terasa resmi, hangat, tenang, dan rapi.
+
+Desain akan diimplementasikan dengan Laravel, React, TypeScript, Inertia.js, MySQL, dan Tailwind CSS. Animasi menggunakan GSAP dan Lottie. Susun komponen yang reusable dan realistis untuk stack tersebut. Fokus output tahap ini adalah desain dan spesifikasi interaksi; istilah implementasi backend tidak perlu muncul pada layar pengguna.
+
+TIGA ROLE
+1. Pegawai: melihat katalog yang diizinkan, mengajukan pinjaman, melihat status, menerima barang, meminta perpanjangan, mengembalikan, melaporkan masalah, dan membuka dokumen miliknya.
+2. Penanggung Jawab Ruangan: melihat barang pada ruangan penugasannya, memeriksa kondisi, menyiapkan barang yang sudah disetujui, melaksanakan serah-terima, memeriksa pengembalian, dan melakukan inventarisasi.
+3. Koordinator: menyetujui pengajuan sesuai kewenangan, mengelola aset, penetapan pemegang, distribusi, inventarisasi, penghapusan, laporan, dokumen, dan administrasi.
+
+Buat navigasi sesuai role. Role berasal dari akun yang telah mendapat penugasan. Registrasi tidak memiliki pilihan role tinggi atau pengalih role bebas. Subkoordinator/Kepala TU direpresentasikan sebagai jabatan atau mandat pada tahapan review/pengesahan.
+
+ATURAN ALUR
+Peminjaman sementara: Pegawai mengajukan → Koordinator menyetujui → PJ memeriksa dan menyiapkan → formulir serta bukti penandatanganan dilengkapi → serah-terima → aktif → pemeriksaan pengembalian → penutupan Koordinator → selesai.
+Penetapan laptop/kendaraan dinas jangka panjang adalah jenis transaksi tersendiri dengan pemegang dan BAST; jangan tampilkan sebagai pinjaman harian yang selalu terlambat.
+Pengembalian dapat dilakukan per item. Kondisi baik tidak otomatis berarti tersedia: tampilkan status pemakaian/jadwal terpisah. Barang rusak atau jadwal bertabrakan memiliki penjelasan dan langkah tindak lanjut.
+Pengajuan sendiri tidak boleh disetujui sendiri. Penghapusan aset membutuhkan kelengkapan pengesahan dan SK, dengan riwayat tetap terlihat.
+Status surat dan status transaksi dipisahkan. Persetujuan aplikasi tidak otomatis menampilkan surat sebagai sudah ditandatangani.
+
+SISTEM VISUAL WAJIB
+- Background utama #FFFFFF pada halaman, sidebar, header, formulir, card, tabel, dan dialog.
+- #015850 untuk tombol utama dengan teks putih, navigasi aktif, tautan teks, dan fokus yang jelas.
+- #F77A04 sebagai aksen identitas dan perhatian; bila menjadi latar tombol gunakan teks #1E1935.
+- #0A7DEF untuk ikon informasi dan elemen grafik. Hindari kombinasi teks kecil biru ini di atas putih atau teks putih kecil di atas biru ini.
+- #1E1935 untuk judul, teks utama, label, angka, dan isi tabel.
+- #739ABB untuk dekorasi dan ilustrasi pendukung, bukan teks kecil atau satu-satunya batas kontrol di atas putih.
+- Tints transparan dari palet diperbolehkan untuk badge/border lembut; jangan menjadikan seluruh background abu-abu, hijau, atau gelap.
+- Tanpa gradient, glow, glassmorphism, atau dark mode. Informasi status selalu menggunakan teks dan ikon, bukan warna saja.
+- Tipografi Inter atau sans-serif serupa: teks utama 16 px, tabel/label 14–16 px, judul halaman 28–32 px, angka mudah dibandingkan.
+- Grid 8 px; radius konsisten sekitar 12 px; border halus; shadow ringan; ikon garis satu keluarga.
+- Desktop acuan 1440 px, sidebar sekitar 240 px, header 72 px, jarak konten 24–32 px. Mobile acuan 390 px dengan margin 16 px.
+- Pada mobile, navigasi ringkas dan daftar berubah menjadi card yang informatif. Toolbar tidak boleh menutupi judul, kontrol, atau keyboard.
+- Gunakan satu aksi utama yang jelas per bagian. Detail tambahan ditempatkan pada tab atau bagian yang dapat dibuka.
+
+NOTIFIKASI DAN KONFIRMASI
+Semua notifikasi hasil transaksi, error transaksi, dan konfirmasi penting harus berupa dialog putih di TENGAH layar dengan overlay lembut. Tidak memakai alert/confirm/prompt browser, toast pojok, atau notifikasi melayang di atas.
+Dialog berisi ikon, judul jelas, penjelasan ringkas, objek terkait, dan tombol tindakan spesifik. Contoh: “Pengajuan berhasil dikirim” dengan tombol “Lihat Pengajuan”; “Batalkan pengajuan ini?” dengan tombol “Kembali” dan “Batalkan Pengajuan”.
+Dialog harus tetap di tengah pada mobile, memiliki tinggi terbatas dan isi yang dapat digulir, serta tidak menutup otomatis sebelum terbaca.
+Hanya satu dialog aktif. Keyboard/fokus terjaga dan kembali ke pemicu saat ditutup. Validasi kolom tampil tepat di bawah kolom. Notifikasi pekerjaan dari orang lain masuk ke pusat notifikasi tanpa menginterupsi pengguna; detail dibuka di tengah ketika dipilih.
+
+AUTENTIKASI WAJIB
+Sediakan login, register, verifikasi email, menunggu aktivasi akun, lupa password, reset password, token kedaluwarsa, dan autentikasi dua faktor.
+Setiap kolom password punya ikon mata untuk tampil/sembunyi: login, register, konfirmasi password, ganti password, password baru dan konfirmasi saat reset.
+Halaman lupa password meminta email; ikon mata muncul pada tahap reset ketika pengguna memasukkan password baru.
+Gunakan label nyata, helper text, Caps Lock hint, dukungan paste/password manager, dan error yang tidak membocorkan keberadaan akun.
+Sesudah register, pengguna menjadi Pegawai menunggu verifikasi/aktivasi. Gunakan pesan pemulihan netral: “Jika email terdaftar, petunjuk pemulihan akan dikirim.”
+
+KENYAMANAN DAN AKSESIBILITAS
+Setiap transaksi menampilkan Status saat ini, Diproses oleh, Langkah berikutnya, dan Batas waktu bila berlaku.
+Identitas pegawai diisi otomatis. Pengajuan memakai tiga langkah: Pilih barang dan tanggal → Keperluan/pengambilan → Periksa dan ajukan.
+Tombol sentuh minimal 44×44 px, fokus keyboard terlihat, tombol ikon punya nama aksesibel, input tetap berlabel, dan status tidak mengandalkan warna.
+Sediakan loading skeleton, keadaan kosong dengan satu tindakan, pencarian tanpa hasil, validasi, gagal menyimpan, upload gagal, akses ditolak, dan konflik perubahan. Pertahankan isian ketika terjadi error.
+GSAP untuk transisi opacity/transform sekitar 150–200 ms. Lottie secukupnya pada empty/success state, dengan alternatif statis dan reduced motion. Animasi tidak menunda aksi.
+
+DATA CONTOH
+Gunakan data fiktif: Nabila Putri sebagai Pegawai, Dimas Santoso sebagai PJ Ruangan, Maya Prameswari sebagai Koordinator; email memakai example.test, NIP ditulis tersamarkan.
+Contoh aset: Proyektor Epson EB-FH52, GPS Garmin Montana, Laptop HP Omnibook, Scanner Epson DS-570W II. ID seperti AST-DEMO-001 dan surat seperti PIN-DEMO-0267. Pakai “Seksi Wilayah II Palembang” secara konsisten.
+Gunakan foto ilustratif barang. Dokumen preview bertanda “CONTOH”. Gunakan wordmark SIMON dengan ikon aset sederhana; logo resmi hanya placeholder bila belum diberikan. Jangan membuat tanda tangan/cap resmi, angka inventaris nyata, atau tautan dokumen privat.
+
+KELUARAN PERTAMA
+Mulai dengan sistem visual/komponen inti, halaman Login, dan Dashboard Pegawai. Tampilkan Login dan Dashboard Pegawai pada desktop 1440 px dan mobile 390 px, ditambah contoh dialog tengah sukses dan konfirmasi.
+Dashboard Pegawai menonjolkan pinjaman aktif, barang siap diambil, pengajuan perlu revisi, dan jatuh tempo, dengan tombol “Cari Barang”.
+Menu Pegawai: Beranda, Katalog Barang, Pengajuan Saya, Barang Saya, Dokumen Saya, Bantuan; notifikasi dan profil di header.
+Simpan konsistensi visual ini untuk layar berikutnya. Beri nama setiap layar berdasarkan role dan fungsinya. Sertakan catatan interaksi di luar mockup bila perilaku tidak dapat ditampilkan langsung.
