@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Akbar Alfaidah',
                 'password' => Hash::make('password'),
+                'status' => 'active',
             ]
         );
         $akbar->roleAssignments()->firstOrCreate(['role_id' => $roleKoordinator->id]);
@@ -34,6 +35,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Budi Santoso',
                 'password' => Hash::make('password'),
+                'status' => 'active',
             ]
         );
         $budi->roleAssignments()->firstOrCreate(['role_id' => $rolePegawai->id]);
