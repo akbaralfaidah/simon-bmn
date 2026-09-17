@@ -3,10 +3,10 @@
 @tailwind utilities;
 
 @layer components {
-    .simon-button { @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-[#015850] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#013D38] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A7DEF] disabled:cursor-wait disabled:opacity-50; }
-    .simon-button-secondary { @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0A7DEF]; }
-    .simon-input { @apply block min-h-11 w-full rounded-xl border-slate-300 bg-white text-sm focus:border-[#015850] focus:ring-[#015850]; }
-    .simon-card { @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm; }
+    .simon-button { @apply inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-on-primary transition-colors hover:bg-[#014740] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-wait disabled:opacity-50 shadow-sm; }
+    .simon-button-secondary { @apply inline-flex min-h-[44px] items-center justify-center rounded-xl border border-outline-variant bg-surface-container-lowest px-5 py-2.5 text-sm font-semibold text-on-surface hover:bg-surface-container-highest focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary transition-colors; }
+    .simon-input { @apply block min-h-[44px] w-full rounded-xl border-outline-variant bg-surface-container-lowest text-on-surface text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 placeholder:text-on-surface/40 transition-all; }
+    .simon-card { @apply rounded-xl border border-outline-variant bg-surface-container-lowest p-space-lg shadow-[0_1px_3px_0_rgba(30,25,53,0.04),_0_1px_2px_-1px_rgba(30,25,53,0.02)]; }
 }
 
 @media (prefers-reduced-motion: reduce) {
