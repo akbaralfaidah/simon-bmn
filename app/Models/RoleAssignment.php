@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -13,11 +14,15 @@ class RoleAssignment extends Model
         'room_id',
         'starts_at',
         'ends_at',
+        'is_global',
+        'can_administer',
     ];
 
     protected $casts = [
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        'is_global' => 'boolean',
+        'can_administer' => 'boolean',
     ];
 
     public function user(): BelongsTo

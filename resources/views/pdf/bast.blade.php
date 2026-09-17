@@ -1,88 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>BAST {{ $bast->bast_number }}</title>
+    <meta charset="utf-8">
+    <title>{{ $bast->bast_number }}</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
-        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .title { font-weight: bold; font-size: 14px; text-decoration: underline; text-align: center; }
-        .number { text-align: center; margin-bottom: 20px; }
-        .content { margin-top: 20px; line-height: 1.5; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        table, th, td { border: 1px solid black; }
-        th, td { padding: 8px; text-align: left; }
-        .signatures { margin-top: 50px; width: 100%; }
-        .signatures td { border: none; text-align: center; width: 50%; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; line-height: 1.6; }
+        @page { margin: 28mm 18mm 22mm; }
+        h1 { font-size: 16px; text-align: center; } .center { text-align: center; }
+        thead { display: table-header-group; } tr { page-break-inside: avoid; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; } td, th { border: 1px solid #555; padding: 8px; }
+        .notice { border: 1px solid #555; padding: 10px; } .sign td { border: none; width: 50%; text-align: center; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <strong>KEMENTERIAN LINGKUNGAN HIDUP DAN KEHUTANAN</strong><br>
-        DIREKTORAT JENDERAL PENEGAKAN HUKUM LINGKUNGAN HIDUP DAN KEHUTANAN<br>
-        BALAI PENGAMANAN DAN PENEGAKAN HUKUM LINGKUNGAN HIDUP DAN KEHUTANAN WILAYAH SUMATERA
-    </div>
-    
-    <div class="title">BERITA ACARA SERAH TERIMA BARANG MILIK NEGARA</div>
-    <div class="number">Nomor: {{ $bast->bast_number }}</div>
-    
-    <div class="content">
-        Pada hari ini, tanggal {{ now()->translatedFormat('d F Y') }}, kami yang bertanda tangan di bawah ini:
-        
-        <br><br>
-        <strong>Pihak Pertama (Yang Menyerahkan):</strong><br>
-        Nama: {{ $bast->issuer->name ?? '..................' }}<br>
-        NIP: {{ $bast->issuer->employeeProfile->nip ?? '..................' }}<br>
-        
-        <br>
-        <strong>Pihak Kedua (Yang Menerima):</strong><br>
-        Nama: {{ $bast->receiver->name ?? '..................' }}<br>
-        NIP: {{ $bast->receiver->employeeProfile->nip ?? '..................' }}<br>
-        
-        <br>
-        Telah melakukan serah terima Barang Milik Negara dengan rincian sebagai berikut:
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Nama Barang</th>
-                    <th>NUP</th>
-                    <th>Kondisi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if($bast->reference && $bast->reference->items)
-                    @foreach($bast->reference->items as $index => $item)
-                    <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ $item->asset->name ?? '-' }}</td>
-                        <td>{{ $item->asset->nup ?? '-' }}</td>
-                        <td>{{ $item->asset->condition ?? '-' }}</td>
-                    </tr>
-                    @endforeach
-                @else
-                    <tr><td colspan="4">Data barang tidak ditemukan.</td></tr>
-                @endif
-            </tbody>
-        </table>
-        
-        <br>
-        Demikian Berita Acara Serah Terima ini dibuat dengan sebenarnya untuk dipergunakan sebagaimana mestinya.
-    </div>
-    
-    <table class="signatures">
-        <tr>
-            <td>
-                Yang Menerima,<br>Pihak Kedua
-                <br><br><br><br><br>
-                <strong>{{ $bast->receiver->name ?? '..................' }}</strong>
-            </td>
-            <td>
-                Yang Menyerahkan,<br>Pihak Pertama
-                <br><br><br><br><br>
-                <strong>{{ $bast->issuer->name ?? '..................' }}</strong>
-            </td>
-        </tr>
-    </table>
+<p class="center">{{ data_get($bast->snapshot, 'header', 'SIMON — Sistem Informasi Barang Milik Negara') }}</p>
+<h1>{{ data_get($bast->snapshot, 'title', \App\Services\DocumentService::TEMPLATES[$bast->bast_type] ?? 'BERITA ACARA SERAH TERIMA BARANG MILIK NEGARA') }}</h1>
+<p class="center">Nomor: {{ $bast->bast_number }}<br>Dibuat: {{ $bast->created_at->format('d-m-Y') }}</p>
+<p class="notice">DRAF/CETAK SISTEM — bukan bukti tanda tangan. Dokumen sah diperiksa melalui berkas bertanda tangan yang diunggah dan diverifikasi. Status berkas: {{ $bast->status }}.</p>
+<p>Yang menyerahkan: {{ data_get($bast->snapshot, 'issuer', $bast->issuer?->name ?? '-') }}<br>
+Yang menerima: {{ data_get($bast->snapshot, 'receiver', $bast->receiver?->name ?? '-') }}</p>
+<p>Keperluan: {{ data_get($bast->snapshot, 'purpose', '-') }}<br>
+Periode: {{ data_get($bast->snapshot, 'start_date', '-') }} s.d. {{ data_get($bast->snapshot, 'end_date', '-') }}</p>
+<table>
+    <thead><tr><th>No.</th><th>Nama barang</th><th>Kode barang</th><th>NUP</th><th>Kondisi tercatat</th></tr></thead>
+    <tbody>
+    @forelse(data_get($bast->snapshot, 'items', []) as $item)
+        <tr><td>{{ $loop->iteration }}</td><td>{{ $item['name'] }}</td><td>{{ $item['item_code'] ?? '-' }}</td><td>{{ $item['nup'] ?? '-' }}</td><td>{{ $item['condition'] ?? '-' }}</td></tr>
+    @empty
+        <tr><td colspan="5">Dokumen lama belum memiliki snapshot. Periksa dokumen sumber sebelum penggunaan.</td></tr>
+    @endforelse
+    </tbody>
+</table>
+<p>Data di atas merupakan rekaman pada saat dokumen dibuat. Verifikasi identitas, kelengkapan dan kondisi fisik sebelum penandatanganan.</p>
+<table class="sign"><tr><td>Yang menyerahkan<br><br><br><br>(__________________)</td><td>Yang menerima<br><br><br><br>(__________________)</td></tr></table>
 </body>
 </html>

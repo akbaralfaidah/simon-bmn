@@ -2,17 +2,22 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Asset extends Model
 {
     use HasUuids;
 
     protected $guarded = [];
+
+    protected function casts(): array
+    {
+        return ['is_loanable' => 'boolean', 'value' => 'decimal:2', 'identity_verified_at' => 'datetime'];
+    }
 
     public function category(): BelongsTo
     {

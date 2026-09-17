@@ -17,6 +17,7 @@ export default function Create({ auth, categories, rooms }: any) {
         acquisition_date: '',
         value: '',
         condition: 'Baik',
+        is_loanable: false,
         images: [] as File[],
     });
 
@@ -45,6 +46,7 @@ export default function Create({ auth, categories, rooms }: any) {
                 </div>
 
                 <form onSubmit={submit}>
+                    <label className="simon-card mb-5 flex items-center gap-3 text-sm"><input type="checkbox" checked={data.is_loanable} onChange={e => setData('is_loanable', e.target.checked)} /> Izinkan aset diajukan untuk peminjaman</label>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Card 1: Informasi Dasar */}
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">

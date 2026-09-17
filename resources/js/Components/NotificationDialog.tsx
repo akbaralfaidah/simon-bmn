@@ -1,7 +1,9 @@
 import { ReactNode } from 'react';
+import { DialogTitle } from '@headlessui/react';
 import Modal from './Modal';
 import PrimaryButton from './PrimaryButton';
 import SecondaryButton from './SecondaryButton';
+import SuccessMotion from './SuccessMotion';
 
 interface NotificationDialogProps {
     show: boolean;
@@ -49,9 +51,9 @@ export default function NotificationDialog({
         <Modal show={show} onClose={onClose} maxWidth="sm">
             <div className="p-6 text-center">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 mb-4">
-                    {renderIcon()}
+                    {type === 'success' ? <SuccessMotion /> : renderIcon()}
                 </div>
-                <h3 className="text-lg font-semibold text-dark mb-2">{title}</h3>
+                <DialogTitle className="text-lg font-semibold text-dark mb-2">{title}</DialogTitle>
                 <div className="text-sm text-gray-500 mb-4">
                     {description}
                 </div>

@@ -10,9 +10,12 @@ class CustodyAssignment extends Model
 {
     protected $guarded = [];
 
+    protected $hidden = ['evidence_path', 'return_evidence_path', 'return_evidence_checksum'];
+
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'physically_received_at' => 'datetime',
     ];
 
     public function asset(): BelongsTo

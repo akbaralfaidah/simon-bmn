@@ -19,11 +19,15 @@ class CheckUserStatus
             if (auth()->user()->status === 'pending') {
                 return redirect()->route('pending.notice');
             }
-            if (auth()->user()->status === 'suspended') {
+            if (auth()->user()->status !== 'active') {
                 auth()->logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
                 return redirect()->route('login')->with('status', 'Akun Anda telah ditangguhkan.');
             }
         }
+
         return $next($request);
     }
 }

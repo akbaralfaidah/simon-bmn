@@ -10,5 +10,8 @@ export type PageProps<
 > = T & {
     auth: {
         user: User;
+        roles: string[];
+        can: { coordinate: boolean; inspect: boolean; administer: boolean };
     };
+    unreadNotifications: number;
 };

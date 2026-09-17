@@ -1,154 +1,59 @@
-import { Link, usePage } from '@inertiajs/react';
-import { PropsWithChildren, ReactNode, useState } from 'react';
-import { cn } from '@/lib/utils';
-import { 
-    LayoutDashboard, 
-    PackageSearch, 
-    ShoppingCart, 
-    ClipboardCheck, 
-    FileText, 
-    Settings, 
-    LogOut,
-    Menu,
-    X,
-    User,
-    Shield
-} from 'lucide-react';
-import Dropdown from '@/Components/Dropdown';
+import { Link, usePage, usePoll } from '@inertiajs/react';
+import PageMotion from '@/Components/PageMotion';
+import { PropsWithChildren, ReactNode } from 'react';
+import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
+import { useState } from 'react';
+import { Bell, Menu, X, LogOut, Search } from 'lucide-react';
+import FlashDialog from '@/Components/FlashDialog';
+import { PageProps } from '@/types';
 
-export default function Authenticated({
-    header,
-    children,
-}: PropsWithChildren<{ header?: ReactNode }>) {
-    const user = usePage().props.auth.user as any;
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-
-    const navItems = [
-        { name: 'Beranda', href: route('dashboard'), icon: LayoutDashboard, active: route().current('dashboard') },
-        { name: 'Katalog Aset', href: route('assets.index'), icon: PackageSearch, active: route().current('assets.*') },
+export default function Authenticated({ header, children }: PropsWithChildren<{ header?: ReactNode }>) {
+    const { auth, unreadNotifications } = usePage<PageProps>().props;
+    usePoll(45000, { only: ['unreadNotifications'] });
+    const [open, setOpen] = useState(false);
+    const operational = auth.can.coordinate || auth.can.inspect;
+    const nav = [
+        { name: 'Beranda', url: route('dashboard') },
+        { name: 'Katalog aset', url: route('assets.index') },
+        { name: 'Peminjaman', url: route('loans.index') },
+        ...(auth.can.coordinate ? [{ name: 'Persetujuan', url: route('loans.approvals') }] : []),
+        { name: 'Penetapan pemegang', url: route('workspace.index', 'custody') },
+        { name: 'Lapor kerusakan / kehilangan', url: route('workspace.index', 'incidents') },
+        ...(operational ? [
+            { name: 'Inventarisasi & DBR', url: route('workspace.index', 'inventory') },
+            { name: 'Mutasi ruangan', url: route('workspace.index', 'transfers') },
+            { name: 'Perawatan', url: route('workspace.index', 'maintenance') },
+            { name: 'Penghapusan', url: route('workspace.index', 'disposals') },
+            { name: 'SPIP', url: route('spip.index') },
+            { name: 'Register ASP / PSP', url: route('workspace.index', 'registers') },
+            { name: 'Laporan', url: route('workspace.index', 'reports') },
+            { name: 'Jejak audit', url: route('workspace.index', 'audit') },
+        ] : []),
+        { name: 'Dokumen & arsip', url: route('documents.index') },
+        { name: 'Keamanan & MFA', url: route('two-factor.show') },
+        { name: 'Perangkat & sesi', url: route('sessions.index') },
+        ...(auth.can.coordinate ? [{ name: 'Impor aset', url: route('imports.index') }] : []),
+        ...(auth.can.administer ? [{ name: 'Administrasi', url: route('administration.index') }] : []),
     ];
-
-    return (
-        <div className="min-h-screen bg-gray-50 flex font-sans">
-            {/* Sidebar Mobile Overlay */}
-            {sidebarOpen && (
-                <div 
-                    className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
-
-            {/* Sidebar */}
-            <aside className={cn(
-                "fixed inset-y-0 left-0 z-50 w-72 bg-brand-primary text-white transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 flex flex-col shadow-2xl lg:shadow-none",
-                sidebarOpen ? "translate-x-0" : "-translate-x-full"
-            )}>
-                {/* Brand / Logo */}
-                <div className="h-20 flex items-center justify-between px-6 border-b border-white/10 shrink-0 bg-brand-primaryDark">
-                    <Link href="/" className="flex items-center gap-4">
-                        <div className="h-10 w-10 bg-white rounded-lg flex items-center justify-center p-1 shadow-inner">
-                            <img src="/images/logo-gakkum.webp" alt="Logo" className="h-full w-full object-contain" />
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="font-bold text-lg leading-tight tracking-wide text-white">SIMON</span>
-                            <span className="text-[10px] text-brand-secondary font-semibold uppercase tracking-wider">Gakkum Sumatera</span>
-                        </div>
-                    </Link>
-                    <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/70 hover:text-white bg-white/5 p-1 rounded-md">
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
-
-                {/* Navigation */}
-                <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1.5">
-                    <div className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-4 px-2">Menu Utama</div>
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className={cn(
-                                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 font-medium text-sm group",
-                                item.active 
-                                    ? "bg-brand-secondary text-white shadow-lg shadow-brand-secondary/30 ring-1 ring-white/20" 
-                                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                            )}
-                        >
-                            <item.icon className={cn(
-                                "h-5 w-5 transition-transform duration-200 group-hover:scale-110", 
-                                item.active ? "text-white" : "text-brand-secondary"
-                            )} />
-                            {item.name}
-                        </Link>
-                    ))}
-                </nav>
-
-                {/* User Info & Logout */}
-                <div className="p-5 border-t border-white/10 shrink-0 bg-brand-primaryDark/30">
-                    <div className="flex items-center gap-3 mb-5">
-                        <div className="h-11 w-11 rounded-full bg-gradient-to-br from-brand-secondary to-brand-secondaryDark flex items-center justify-center shrink-0 shadow-inner ring-2 ring-white/10">
-                            <User className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="overflow-hidden">
-                            <p className="text-sm font-semibold truncate text-white">{user.name}</p>
-                            <p className="text-xs text-white/50 truncate flex items-center gap-1 mt-0.5">
-                                <Shield className="h-3 w-3 text-brand-secondary" />
-                                {user.email}
-                            </p>
-                        </div>
-                    </div>
-                    <Link
-                        href={route('logout')}
-                        method="post"
-                        as="button"
-                        className="flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white/80 hover:text-white bg-white/5 hover:bg-red-500/80 rounded-xl transition-all duration-200 border border-white/5"
-                    >
-                        <LogOut className="h-4 w-4" />
-                        Keluar
-                    </Link>
-                </div>
-            </aside>
-
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-                {/* Top Header */}
-                <header className="h-20 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-10 shrink-0 shadow-sm z-10">
-                    <div className="flex items-center gap-4">
-                        <button 
-                            onClick={() => setSidebarOpen(true)}
-                            className="lg:hidden text-gray-500 hover:text-brand-primary bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition-colors"
-                        >
-                            <Menu className="h-5 w-5" />
-                        </button>
-                        {header && (
-                            <div className="text-xl font-bold text-gray-800 hidden sm:block">
-                                {header}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <Dropdown>
-                            <Dropdown.Trigger>
-                                <button className="flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-brand-primary transition-colors bg-gray-50 hover:bg-gray-100 py-1.5 px-3 rounded-full border border-gray-200">
-                                    <span>{user.name}</span>
-                                    <div className="h-8 w-8 rounded-full bg-brand-primary/10 text-brand-primary flex items-center justify-center">
-                                        <User className="h-4 w-4" />
-                                    </div>
-                                </button>
-                            </Dropdown.Trigger>
-                            <Dropdown.Content>
-                                <Dropdown.Link href={route('profile.edit')}>Pengaturan Profil</Dropdown.Link>
-                                <Dropdown.Link href={route('logout')} method="post" as="button">Keluar</Dropdown.Link>
-                            </Dropdown.Content>
-                        </Dropdown>
-                    </div>
-                </header>
-
-                {/* Page Content */}
-                <main className="flex-1 overflow-y-auto p-4 lg:p-10 bg-[#F4F7F6]">
-                    {children}
-                </main>
-            </div>
+    const current = usePage().url.split('?')[0];
+    const navigation = <div className="flex h-full flex-col">
+        <Link href={route('dashboard')} className="flex items-center gap-3 p-6"><img src="/images/logo-gakkum.webp" alt="" className="h-10 w-10 object-contain" /><span><strong className="text-lg tracking-wide text-[#015850]">SIMON</strong><span className="block text-[10px] text-slate-500">BARANG MILIK NEGARA</span></span></Link>
+        <div className="mx-4 mb-4 rounded-xl bg-[#015850]/5 p-3 text-xs"><p className="font-semibold text-[#015850]">{auth.roles.join(' · ') || 'Pegawai'}</p><p className="mt-1 text-slate-500">Akses sesuai penugasan aktif</p></div>
+        <nav aria-label="Navigasi utama" className="flex-1 space-y-1 overflow-y-auto px-3 pb-6">{nav.map(item => <Link key={item.name} href={item.url} onClick={() => setOpen(false)} aria-current={new URL(item.url, window.location.origin).pathname === current ? 'page' : undefined} className={'block rounded-xl px-4 py-3 text-sm font-medium ' + (new URL(item.url, window.location.origin).pathname === current ? 'bg-[#015850] text-white' : 'text-slate-600 hover:bg-slate-50')}>{item.name}</Link>)}</nav>
+        <Link href={route('profile.edit')} className="border-t p-4 text-sm font-semibold">{auth.user.name}<span className="block text-xs font-normal text-slate-500">Profil & keamanan akun</span></Link>
+    </div>;
+    return <div className="min-h-screen bg-white text-[#1E1935]">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:z-[70] focus:bg-white focus:p-4">Lewati ke konten</a>
+        <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-slate-100 lg:block">{navigation}</aside>
+        <Dialog open={open} onClose={setOpen} className="relative z-50 lg:hidden"><div className="fixed inset-0 bg-black/40" /><DialogPanel className="fixed inset-y-0 left-0 w-72 bg-white"><DialogTitle className="sr-only">Menu navigasi</DialogTitle><button aria-label="Tutup menu" className="absolute right-2 top-2 p-3" onClick={() => setOpen(false)}><X size={18} /></button>{navigation}</DialogPanel></Dialog>
+        <div className="lg:pl-64">
+            <header className="flex h-20 items-center justify-between gap-3 border-b border-slate-100 px-4 sm:px-8">
+                <button className="p-3 lg:hidden" aria-label="Buka menu" onClick={() => setOpen(true)}><Menu /></button>
+                <form action={route('assets.index')} className="relative w-full max-w-md"><label htmlFor="global-search" className="sr-only">Cari nama aset, kode, atau NUP</label><Search className="absolute left-3 top-3 text-slate-400" size={18} /><input id="global-search" name="search" className="simon-input pl-10" placeholder="Cari aset, kode, atau NUP…" /></form>
+                <div className="flex items-center gap-2"><Link href={route('workspace.index', 'notifications')} aria-label={'Notifikasi, ' + unreadNotifications + ' belum dibaca'} className="relative p-3"><Bell size={20} />{unreadNotifications > 0 && <span className="absolute right-0 top-0 rounded-full bg-[#F77A04] px-1.5 text-xs font-bold text-[#1E1935]">{unreadNotifications}</span>}</Link><Link href={route('logout')} method="post" as="button" className="p-3" aria-label="Keluar"><LogOut size={20} /></Link></div>
+            </header>
+            <main id="main-content" className="mx-auto max-w-7xl px-4 py-7 sm:px-8">{header && <div className="mb-7">{header}</div>}<PageMotion>{children}</PageMotion></main>
         </div>
-    );
+        <FlashDialog />
+    </div>;
 }

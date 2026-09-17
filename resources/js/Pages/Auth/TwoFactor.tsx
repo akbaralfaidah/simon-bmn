@@ -1,0 +1,25 @@
+import GuestLayout from '@/Layouts/GuestLayout';
+import TextInput from '@/Components/TextInput';
+import InputError from '@/Components/InputError';
+import ActionForm from '@/Components/ActionForm';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { QRCodeSVG } from 'qrcode.react';
+import { useState } from 'react';
+
+export default function TwoFactor({ enabled, required, verified, qrUrl, recoveryCodes }: { enabled: boolean; required: boolean; verified: boolean; qrUrl: string | null; recoveryCodes: string[] }) {
+    const [useRecovery, setUseRecovery] = useState(false);
+    const form = useForm({ password: '', code: '', recovery_code: '' });
+    return <GuestLayout><Head title="Verifikasi dua langkah" /><h1 className="text-2xl font-bold text-[#1E1935]">Verifikasi dua langkah</h1><p className="mb-6 mt-3 text-sm text-slate-600">{required ? 'Wajib untuk PJ dan Koordinator sebelum menggunakan layanan BMN.' : 'Tambahkan perlindungan pada akun Anda.'}</p>
+        {!enabled && !qrUrl && <form className="space-y-4" onSubmit={e => { e.preventDefault(); form.post(route('two-factor.enable'), { onFinish: () => form.reset('password') }); }}>
+            <p className="text-sm text-slate-600">Siapkan aplikasi autentikator pada perangkat pribadi. Konfirmasi kata sandi untuk menampilkan QR penyiapan.</p><label className="block text-sm font-medium" htmlFor="setup-password">Kata sandi saat ini</label><TextInput id="setup-password" type="password" required autoComplete="current-password" value={form.data.password} onChange={e => form.setData('password', e.target.value)} /><InputError message={form.errors.password} /><button disabled={form.processing} className="simon-button w-full">Mulai penyiapan MFA</button>
+        </form>}
+        {!enabled && qrUrl && <form className="space-y-4" onSubmit={e => { e.preventDefault(); form.post(route('two-factor.confirm'), { onFinish: () => form.reset('code') }); }}>
+            <p className="text-sm">Pindai QR ini dengan aplikasi autentikator. Jangan membagikan QR kepada siapa pun.</p><div className="flex justify-center rounded-xl border p-5"><QRCodeSVG value={qrUrl} size={200} marginSize={4} title="QR penyiapan autentikator" /></div><label className="block text-sm font-medium" htmlFor="setup-code">Kode 6 digit dari aplikasi</label><TextInput id="setup-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required value={form.data.code} onChange={e => form.setData('code', e.target.value)} /><InputError message={form.errors.code} /><button className="simon-button w-full" disabled={form.processing}>Konfirmasi & aktifkan</button>
+        </form>}
+        {enabled && !verified && <form className="space-y-4" onSubmit={e => { e.preventDefault(); form.transform(data => ({ ...data, code: useRecovery ? '' : data.code, recovery_code: useRecovery ? data.recovery_code : '' })); form.post(route('two-factor.challenge'), { onFinish: () => form.reset('code', 'recovery_code') }); }}>
+            <label className="block text-sm font-medium" htmlFor="mfa-code">{useRecovery ? 'Kode pemulihan sekali pakai' : 'Kode 6 digit dari autentikator'}</label><TextInput id="mfa-code" type={useRecovery ? 'password' : 'text'} inputMode={useRecovery ? 'text' : 'numeric'} autoComplete="one-time-code" required value={useRecovery ? form.data.recovery_code : form.data.code} onChange={e => form.setData(useRecovery ? 'recovery_code' : 'code', e.target.value)} /><InputError message={form.errors.code || form.errors.recovery_code} /><button className="simon-button w-full" disabled={form.processing}>Verifikasi & masuk</button><button type="button" className="text-sm font-medium text-[#015850]" onClick={() => { setUseRecovery(!useRecovery); form.clearErrors(); }}>{useRecovery ? 'Gunakan aplikasi autentikator' : 'Perangkat hilang? Gunakan kode pemulihan'}</button>
+        </form>}
+        {enabled && verified && <div className="space-y-4"><p className="rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">MFA aktif dan sesi ini telah diverifikasi.</p>{recoveryCodes.length > 0 && <section><h2 className="font-semibold">Simpan kode pemulihan</h2><p className="my-2 text-xs text-slate-500">Setiap kode hanya dapat digunakan sekali. Simpan di pengelola kata sandi atau tempat aman, terpisah dari perangkat autentikator.</p><ul className="grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3">{recoveryCodes.map(code => <li key={code} className="font-mono text-xs">{code}</li>)}</ul></section>}<ActionForm title="Buat ulang kode pemulihan" url={route('two-factor.recovery')} fields={[{ name: 'password', label: 'Kata sandi saat ini', type: 'password' }]} description="Seluruh kode pemulihan lama akan tidak berlaku. Anda harus menyimpan kode baru." />{!required && <ActionForm title="Nonaktifkan MFA" url={route('two-factor.disable')} fields={[{ name: 'password', label: 'Kata sandi saat ini', type: 'password' }]} />}<Link href={route('dashboard')} className="simon-button w-full">Lanjut ke beranda</Link></div>}
+        <Link href={route('logout')} method="post" as="button" className="mt-6 w-full text-center text-sm text-slate-500">Keluar dari akun</Link>
+    </GuestLayout>;
+}

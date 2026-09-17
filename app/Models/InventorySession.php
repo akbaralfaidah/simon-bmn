@@ -10,9 +10,13 @@ class InventorySession extends Model
 {
     protected $guarded = [];
 
+    protected $hidden = ['reviews'];
+
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'reviews' => 'array',
+        'final_snapshot' => 'array',
     ];
 
     public function creator(): BelongsTo

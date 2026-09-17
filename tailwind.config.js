@@ -16,6 +16,10 @@ export default {
                 sans: ['Inter', 'Figtree', ...defaultTheme.fontFamily.sans],
             },
             colors: {
+                primary: '#015850',
+                dark: '#1E1935',
+                info: '#0A7DEF',
+                support: '#739ABB',
                 brand: {
                     primary: '#015850', // Forest Teal
                     primaryLight: '#017A6F',

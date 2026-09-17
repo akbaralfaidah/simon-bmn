@@ -1,11 +1,13 @@
 import { Link } from '@inertiajs/react';
 import { PropsWithChildren } from 'react';
+import FlashDialog from '@/Components/FlashDialog';
 
 export default function Guest({ children }: PropsWithChildren) {
     return (
         <div className="min-h-screen flex font-sans">
+            <FlashDialog />
             {/* Left Panel - Branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-primaryDark via-brand-primary to-brand-primaryLight relative overflow-hidden items-center justify-center">
+            <div className="hidden lg:flex lg:w-1/2 bg-white border-r border-slate-100 relative overflow-hidden items-center justify-center">
                 {/* Decorative Circles */}
                 <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
                 <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-brand-secondary/10 rounded-full blur-2xl" />
@@ -15,11 +17,11 @@ export default function Guest({ children }: PropsWithChildren) {
                     <div className="mx-auto mb-8 h-24 w-24 bg-white rounded-2xl flex items-center justify-center p-3 shadow-2xl shadow-black/20">
                         <img src="/images/logo-gakkum.webp" alt="Logo Gakkum" className="h-full w-full object-contain" />
                     </div>
-                    <h1 className="text-4xl font-bold text-white tracking-tight mb-3">SIMON</h1>
-                    <p className="text-lg text-brand-secondaryLight font-semibold uppercase tracking-widest mb-6">
-                        Sistem Informasi Manajemen
+                    <h1 className="text-4xl font-bold text-brand-primary tracking-tight mb-3">SIMON</h1>
+                    <p className="text-lg text-brand-dark font-semibold uppercase tracking-widest mb-6">
+                        Sistem Informasi Barang Milik Negara
                     </p>
-                    <p className="text-white/70 text-sm leading-relaxed">
+                    <p className="text-slate-600 text-sm leading-relaxed">
                         Kelola seluruh siklus hidup Barang Milik Negara — dari registrasi, peminjaman, penetapan,
                         hingga pelaporan inventarisasi — dalam satu platform terpusat untuk
                         Balai Penegakan Hukum Lingkungan Hidup dan Kehutanan Wilayah Sumatera.
@@ -28,7 +30,7 @@ export default function Guest({ children }: PropsWithChildren) {
             </div>
 
             {/* Right Panel - Form */}
-            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center bg-[#F4F7F6] px-6 py-12">
+            <div className="w-full lg:w-1/2 flex flex-col items-center justify-center bg-white px-6 py-12">
                 {/* Mobile Logo */}
                 <div className="lg:hidden mb-8 text-center">
                     <Link href="/" className="inline-flex flex-col items-center gap-3">

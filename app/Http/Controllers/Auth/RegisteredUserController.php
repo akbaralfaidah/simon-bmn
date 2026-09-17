@@ -3,62 +3,47 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\OrganizationUnit;
 use App\Models\EmployeeProfile;
+use App\Models\OrganizationUnit;
+use App\Models\Role;
+use App\Models\RoleAssignment;
+use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
     public function create(): Response
     {
-        $units = OrganizationUnit::all();
-        return Inertia::render('Auth/Register', [
-            'units' => $units
-        ]);
+        return Inertia::render('Auth/Register', ['units' => OrganizationUnit::orderBy('name')->get(['id', 'name'])]);
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+        $data = $request->validate([
+            'name' => 'required|string|max:255', 'email' => 'required|string|lowercase|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'unit_id' => 'required|exists:organization_units,id',
+            'unit_id' => 'required|exists:organization_units,id', 'nip' => 'nullable|string|max:30', 'phone' => 'nullable|string|max:30',
         ]);
+        $user = DB::transaction(function () use ($data) {
+            $user = User::create(['name' => $data['name'], 'email' => $data['email'], 'password' => Hash::make($data['password']), 'status' => 'pending']);
+            EmployeeProfile::create(['user_id' => $user->id, 'unit_id' => $data['unit_id'], 'nip' => $data['nip'] ?? null, 'phone' => $data['phone'] ?? null]);
+            $role = Role::firstOrCreate(['name' => 'Pegawai']);
+            RoleAssignment::create(['user_id' => $user->id, 'role_id' => $role->id, 'unit_id' => $data['unit_id'], 'starts_at' => now()]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'status' => 'pending',
-        ]);
-
-        EmployeeProfile::create([
-            'user_id' => $user->id,
-            'unit_id' => $request->unit_id,
-        ]);
-
+            return $user;
+        });
         event(new Registered($user));
-
         Auth::login($user);
+        $request->session()->regenerate();
 
-        return redirect(route('dashboard', absolute: false));
+        return to_route('verification.notice');
     }
 }

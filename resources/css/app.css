@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .simon-button { @apply inline-flex min-h-11 items-center justify-center rounded-xl bg-[#015850] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#013D38] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A7DEF] disabled:cursor-wait disabled:opacity-50; }
+    .simon-button-secondary { @apply inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0A7DEF]; }
+    .simon-input { @apply block min-h-11 w-full rounded-xl border-slate-300 bg-white text-sm focus:border-[#015850] focus:ring-[#015850]; }
+    .simon-card { @apply rounded-2xl border border-slate-200 bg-white p-5 shadow-sm; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

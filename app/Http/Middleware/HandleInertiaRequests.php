@@ -2,38 +2,37 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\AccessScope;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that is loaded on the first page visit.
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determine the current asset version.
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     *
-     * @return array<string, mixed>
-     */
     public function share(Request $request): array
     {
+        $user = $request->user();
+        $scope = app(AccessScope::class);
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'roles' => fn () => $user ? $scope->assignments($user, [...AccessScope::COORDINATORS, ...AccessScope::KEEPERS, 'Pegawai'])->with('role')->get()->pluck('role.name')->unique()->values() : [],
+                'can' => [
+                    'coordinate' => $user?->hasRole(AccessScope::COORDINATORS) ?? false,
+                    'inspect' => $user?->hasRole(AccessScope::KEEPERS) ?? false,
+                    'administer' => $user ? $scope->administer($user) : false,
+                ],
             ],
+            'unreadNotifications' => fn () => $user?->unreadNotifications()->count() ?? 0,
+            'flash' => ['success' => fn () => $request->session()->get('success'), 'error' => fn () => $request->session()->get('error'), 'status' => fn () => $request->session()->get('status')],
         ];
     }
 }

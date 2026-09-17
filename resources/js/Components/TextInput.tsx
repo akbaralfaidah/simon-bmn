@@ -39,7 +39,7 @@ export default forwardRef(function TextInput(
                 type={inputType}
                 className={
                     'rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary w-full ' +
-                    className
+                    className + (isPassword ? ' !pr-12' : '')
                 }
                 ref={localRef}
             />
@@ -47,7 +47,8 @@ export default forwardRef(function TextInput(
                 <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+                    className="absolute inset-y-0 right-0 min-w-11 flex items-center justify-center text-gray-500 hover:text-gray-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#0A7DEF]"
+                    aria-pressed={showPassword}
                     aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
                 >
                     {showPassword ? (

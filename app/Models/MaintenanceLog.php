@@ -23,4 +23,14 @@ class MaintenanceLog extends Model
     {
         return $this->belongsTo(User::class, 'reported_by');
     }
+
+    public function loanItem(): BelongsTo
+    {
+        return $this->belongsTo(LoanItem::class);
+    }
+
+    public function custodyAssignment(): BelongsTo
+    {
+        return $this->belongsTo(CustodyAssignment::class);
+    }
 }

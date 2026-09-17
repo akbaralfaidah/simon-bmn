@@ -30,7 +30,9 @@ export default function ResetPassword({
 
     return (
         <GuestLayout>
-            <Head title="Reset Password" />
+            <Head title="Atur ulang kata sandi" />
+            <h1 className="mb-2 text-xl font-bold">Atur ulang kata sandi</h1>
+            <p className="mb-6 text-sm text-slate-600">Gunakan minimal 15 karakter. Semua sesi lama akan diakhiri setelah kata sandi diperbarui.</p>
 
             <form onSubmit={submit}>
                 <div>
@@ -50,7 +52,7 @@ export default function ResetPassword({
                 </div>
 
                 <div className="mt-4">
-                    <InputLabel htmlFor="password" value="Password" />
+                    <InputLabel htmlFor="password" value="Kata sandi baru" />
 
                     <TextInput
                         id="password"
@@ -59,6 +61,9 @@ export default function ResetPassword({
                         value={data.password}
                         className="mt-1 block w-full"
                         autoComplete="new-password"
+                        minLength={15}
+                        maxLength={128}
+                        required
                         isFocused={true}
                         onChange={(e) => setData('password', e.target.value)}
                     />
@@ -69,10 +74,11 @@ export default function ResetPassword({
                 <div className="mt-4">
                     <InputLabel
                         htmlFor="password_confirmation"
-                        value="Confirm Password"
+                        value="Ulangi kata sandi baru"
                     />
 
                     <TextInput
+                        id="password_confirmation"
                         type="password"
                         name="password_confirmation"
                         value={data.password_confirmation}
@@ -91,7 +97,7 @@ export default function ResetPassword({
 
                 <div className="mt-4 flex items-center justify-end">
                     <PrimaryButton className="ms-4" disabled={processing}>
-                        Reset Password
+                        {processing ? 'Menyimpan…' : 'Simpan kata sandi baru'}
                     </PrimaryButton>
                 </div>
             </form>

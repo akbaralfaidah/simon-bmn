@@ -7,6 +7,41 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Menjalankan SIMON
+
+SIMON memakai Laravel, Inertia React/TypeScript, MySQL dan Tailwind. Status implementasi serta batas verifikasi dicatat dalam [audit perbaikan](docs/AUDIT_PERBAIKAN_SIMON.md). Belum dinyatakan siap produksi.
+
+Jangan jalankan `migrate:fresh` atau seeder impor pada database berisi aset nyata. Simpan kredensial hanya di `.env`, bukan repository. Setelah dependensi tersedia dan konfigurasi database benar:
+
+```sh
+php artisan migrate --no-interaction
+npm run build
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+Foto diproses asinkron. Jalankan worker dan scheduler pada terminal terpisah; keduanya perlu pengelola proses pada server produksi:
+
+```sh
+php artisan queue:work --queue=media,default --tries=3 --timeout=60
+php artisan schedule:work
+```
+
+Tanpa worker, foto tetap berstatus menunggu dan belum dapat dibuka. Scheduler memulihkan antrean foto yang belum terkirim dan membuat pengingat inbox setiap 08.00 WIB. Pengingat tidak mengirim email. Sumber foto disimpan privat; WebP dan thumbnail hanya dibuka setelah pemrosesan berhasil. Foto gagal dapat dicoba ulang oleh pengunggah yang masih berwenang.
+
+`SIMON_SCANNER=development` hanya untuk lokal/testing dan **tidak melakukan pemeriksaan antivirus**. Produksi memerlukan `SIMON_SCANNER=clamav`, executable `SIMON_SCANNER_BINARY` yang benar, serta basis signature ClamAV terbarui. Jika pemindai tidak tersedia, unggahan tidak diloloskan. Jangan menandai template resmi dengan `SIMON_TEMPLATES_APPROVED=true` sebelum formatnya disahkan instansi.
+
+Email `MAIL_MAILER=log` tidak mengirim ke inbox. Konfigurasikan provider email sebelum menguji aktivasi/verifikasi/reset sungguhan. Jangan menonaktifkan kewajiban MFA PJ/Koordinator untuk mengatasi konfigurasi email. Cocokkan batas unggahan PHP/web server dengan batas aplikasi (10 MB per berkas, maksimal 4 foto per pengajuan bukti).
+
+Verifikasi perubahan:
+
+```sh
+php artisan test --compact
+npm run build
+php vendor/bin/pint --dirty --format agent
+```
+
+Suite memakai SQLite in-memory; ini bukan pengganti uji konkurensi MySQL, backup/restore, atau uji penerimaan tiga role.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

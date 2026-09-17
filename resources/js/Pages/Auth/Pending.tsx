@@ -18,9 +18,10 @@ export default function Pending() {
                     Pendaftaran Anda berhasil! Akun Anda saat ini berstatus <span className="font-semibold text-brand-secondary">menunggu verifikasi</span> dari Koordinator BMN.
                 </p>
                 <p className="text-sm text-gray-500 leading-relaxed mb-6">
-                    Silakan hubungi Koordinator BMN untuk mengaktifkan akun Anda. Setelah diaktifkan, Anda dapat mengakses seluruh fitur SIMON.
+                    Pastikan email sudah terverifikasi, lalu hubungi pengelola akun untuk aktivasi. Setelah diaktifkan, fitur tersedia sesuai role dan cakupan penugasan Anda.
                 </p>
 
+                <Link href={route('verification.notice')} className="mb-4 block text-sm font-medium text-brand-primary underline">Periksa verifikasi email / status akun</Link>
                 <Link
                     href={route('logout')}
                     method="post"
