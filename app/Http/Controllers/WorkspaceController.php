@@ -44,7 +44,7 @@ class WorkspaceController extends Controller
     public function dashboard(Request $request): Response
     {
         $assets = $this->scope->assets($request->user());
-        $rooms = $this->scope->roomIds($request->user(), true, AccessScope::COORDINATORS);
+        $rooms = $this->scope->roomIds($request->user(), true, [...AccessScope::COORDINATORS, ...AccessScope::KEEPERS]);
 
         $accountApprovals = 0;
         if ($this->scope->administer($request->user()) || $request->user()->hasRole(AccessScope::COORDINATORS)) {
@@ -65,6 +65,50 @@ class WorkspaceController extends Controller
             }
         }
 
+        $isOperational = $request->user()->hasRole([...AccessScope::COORDINATORS, ...AccessScope::KEEPERS]);
+        $inProgressLoans = [];
+        $inProgressCount = 0;
+        if ($isOperational) {
+            $inProgressQuery = LoanRequest::query()
+                ->whereIn('status', ['pending_approval', 'revision_requested', 'approved', 'active', 'returning'])
+                ->where(function ($query) use ($rooms, $request) {
+                    if ($this->scope->global($request->user())) {
+                        return;
+                    }
+                    $query->whereHas('items.asset', fn ($aq) => $aq->whereIn('room_id', $rooms));
+                });
+
+            $inProgressCount = (clone $inProgressQuery)->count();
+
+            $todayStr = today()->toDateString();
+            $inProgressLoans = $inProgressQuery
+                ->with([
+                    'user:id,name',
+                    'user.profile:id,user_id,nip,unit_id',
+                    'user.profile.unit:id,name',
+                    'items.asset:id,name,room_id',
+                ])
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(fn ($loan) => [
+                    'id' => $loan->id,
+                    'purpose' => $loan->purpose,
+                    'start_date' => $loan->start_date,
+                    'end_date' => $loan->end_date,
+                    'status' => $loan->status,
+                    'is_overdue' => $loan->end_date < $todayStr && in_array($loan->status, ['active', 'approved']),
+                    'user' => [
+                        'id' => $loan->user?->id,
+                        'name' => $loan->user?->name,
+                        'nip' => $loan->user?->profile?->nip,
+                        'unit' => $loan->user?->profile?->unit?->name,
+                    ],
+                    'items_count' => $loan->items->count(),
+                    'asset_names' => $loan->items->map(fn ($item) => $item->asset?->name)->filter()->unique()->values()->all(),
+                ]);
+        }
+
         return Inertia::render('Dashboard', [
             'stats' => [
                 'total' => (clone $assets)->count(),
@@ -73,8 +117,10 @@ class WorkspaceController extends Controller
                 'my_loans' => LoanRequest::where('user_id', $request->user()->id)->whereIn('status', ['active', 'approved', 'returning'])->count(),
                 'approvals' => LoanRequest::where('status', 'pending_approval')->where('user_id', '!=', $request->user()->id)->whereHas('items')->whereDoesntHave('items.asset', fn ($query) => $query->whereNull('room_id')->orWhereNotIn('room_id', $rooms))->count(),
                 'account_approvals' => $accountApprovals,
+                'in_progress_count' => $inProgressCount,
             ],
             'recentLoans' => LoanRequest::where('user_id', $request->user()->id)->latest()->limit(5)->get(['id', 'purpose', 'start_date', 'end_date', 'status']),
+            'inProgressLoans' => $inProgressLoans,
         ]);
     }
 

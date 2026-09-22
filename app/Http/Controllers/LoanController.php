@@ -38,9 +38,10 @@ class LoanController extends Controller
             });
         })->with(['user:id,name', 'items.asset:id,name,room_id']);
         if ($request->routeIs('loans.approvals')) {
-            abort_unless($request->user()->hasRole(AccessScope::COORDINATORS), 403);
+            abort_unless($request->user()->hasRole([...AccessScope::COORDINATORS, ...AccessScope::KEEPERS]), 403);
+            $approverRooms = $this->scope->roomIds($request->user(), true, [...AccessScope::COORDINATORS, ...AccessScope::KEEPERS]);
             $loans->where('status', 'pending_approval')->where('user_id', '!=', $request->user()->id)
-                ->whereDoesntHave('items.asset', fn ($query) => $query->whereNotIn('room_id', $this->scope->roomIds($request->user(), true, AccessScope::COORDINATORS)));
+                ->whereDoesntHave('items.asset', fn ($query) => $query->whereNull('room_id')->orWhereNotIn('room_id', $approverRooms));
         }
 
         return Inertia::render('Loans/Index', ['loans' => $loans->latest()->paginate(15)->withQueryString(), 'approvalMode' => $request->routeIs('loans.approvals')]);

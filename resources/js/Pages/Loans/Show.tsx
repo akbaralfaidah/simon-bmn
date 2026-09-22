@@ -310,7 +310,7 @@ export default function Show({ loan, documents, canDecide, canInspect, returnFol
             );
         })()}
 
-        <div className="simon-card mb-6"><div className="flex flex-wrap items-start justify-between gap-3"><h2 className="text-xl font-semibold">{loan.purpose}</h2><StatusBadge status={loan.status} /></div><p className="mt-3 text-sm text-slate-600">{loan.user.name} · {loan.start_date} sampai {loan.end_date}</p>{loan.decision_reason && <p className="mt-3">Alasan: {loan.decision_reason}</p>}
+        <div className="simon-card mb-6"><div className="flex flex-wrap items-start justify-between gap-3"><h2 className="text-xl font-semibold">{loan.purpose}</h2><StatusBadge status={loan.status} type="loan" /></div><p className="mt-3 text-sm text-slate-600">{loan.user.name} · {loan.start_date} sampai {loan.end_date}</p>{loan.decision_reason && <p className="mt-3">Alasan: {loan.decision_reason}</p>}
             <div className="mt-5 flex flex-wrap gap-2">
                 {owner && loan.status === 'draft' && action('submit', 'Kirim pengajuan')}
                 {owner && ['draft', 'revision_requested'].includes(loan.status) && <Link className="simon-button-secondary" href={route('loans.edit', loan.id)}>Edit draf / revisi</Link>}

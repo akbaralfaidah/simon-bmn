@@ -53,8 +53,8 @@ class WordTemplateService
         if ($peminjamSigPath && file_exists($peminjamSigPath)) {
             $processor->setImageValue('sig_peminjam', [
                 'path' => $peminjamSigPath,
-                'width' => 120,
-                'height' => 55,
+                'width' => 105,
+                'height' => 48,
                 'ratio' => false,
             ]);
         } else {
@@ -69,8 +69,8 @@ class WordTemplateService
         if ($pjSigPath && file_exists($pjSigPath)) {
             $processor->setImageValue('sig_pj', [
                 'path' => $pjSigPath,
-                'width' => 90,
-                'height' => 55,
+                'width' => 105,
+                'height' => 48,
                 'ratio' => false,
             ]);
         } else {
@@ -85,32 +85,32 @@ class WordTemplateService
         if ($koorSigPath && file_exists($koorSigPath)) {
             $processor->setImageValue('sig_koor', [
                 'path' => $koorSigPath,
-                'width' => 90,
-                'height' => 55,
+                'width' => 105,
+                'height' => 48,
                 'ratio' => false,
             ]);
         } else {
             $processor->setValue('sig_koor', '');
         }
 
-        // 4. Koordinator signature below "Mengetahui" (largest, centered over line)
+        // 4. Koordinator signature below "Mengetahui" (clean inline flow, centered over line and name)
         if ($koorSigPath && file_exists($koorSigPath)) {
             $processor->setImageValue('sig_koor_bawah', [
                 'path' => $koorSigPath,
-                'width' => 170,
-                'height' => 75,
+                'width' => 135,
+                'height' => 52,
                 'ratio' => false,
             ]);
         } else {
             $processor->setValue('sig_koor_bawah', '');
         }
 
-        // 5. Pengembalian signatures (always render if signed)
+        // 5. Pengembalian signatures (clean inline flow within borderless table)
         if ($peminjamSigPath && file_exists($peminjamSigPath)) {
             $processor->setImageValue('sig_peminjam_bawah', [
                 'path' => $peminjamSigPath,
-                'width' => 100,
-                'height' => 45,
+                'width' => 105,
+                'height' => 48,
                 'ratio' => false,
             ]);
         } else {
@@ -120,8 +120,8 @@ class WordTemplateService
         if ($pjSigPath && file_exists($pjSigPath)) {
             $processor->setImageValue('sig_pj_bawah', [
                 'path' => $pjSigPath,
-                'width' => 80,
-                'height' => 45,
+                'width' => 105,
+                'height' => 48,
                 'ratio' => false,
             ]);
         } else {
@@ -141,16 +141,34 @@ class WordTemplateService
 
         $processor->saveAs($outputPath);
 
-        // 6. Post-process to make Koordinator signature "In Front of Text", centered over the line
+        // 6. Post-process to ensure A4 paper and clean parentheses on names
         $zip = new ZipArchive;
         if ($zip->open($outputPath) === true) {
             $xml = $zip->getFromName('word/document.xml');
             if ($xml !== false) {
-                $xml = str_replace(
-                    'style="width:170px;height:75px"',
-                    'style="position:absolute;z-index:251660300;mso-wrap-style:none;mso-position-horizontal:center;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;margin-top:6pt;width:170px;height:75px"',
-                    $xml
-                );
+                // Ensure A4 Paper
+                $xml = preg_replace('/<w:pgSz[^>]+>/', '<w:pgSz w:w="11906" w:h="16838" w:code="9"/>', $xml);
+
+                // Strip parentheses wrapping any names
+                $namesToClean = array_filter([
+                    $variables['nama_peminjam'] ?? null,
+                    $variables['peminjam_nama'] ?? null,
+                    $variables['pj_nama'] ?? null,
+                    $variables['koordinator_nama'] ?? null,
+                    $variables['koordinator_bmn_nama'] ?? null,
+                    $variables['peminjam_kembali'] ?? null,
+                    $variables['pj_kembali'] ?? null,
+                ]);
+                foreach ($namesToClean as $name) {
+                    if ($name && $name !== '-') {
+                        $xml = str_replace(
+                            ['('.$name.')', '( '.$name.' )', '('.$name.' )', '( '.$name.')'],
+                            $name,
+                            $xml
+                        );
+                    }
+                }
+
                 $zip->addFromString('word/document.xml', $xml);
             }
             $zip->close();
@@ -432,6 +450,14 @@ class WordTemplateService
 
         // Ensure A4 Paper
         $xml = preg_replace('/<w:pgSz[^>]+>/', '<w:pgSz w:w="11906" w:h="16838" w:code="9"/>', $xml);
+
+        // Remove any parentheses around names or dots in the template
+        $xml = str_replace(
+            ['(${peminjam_nama})', '(${pj_nama})', '(${koordinator_nama})', '(${koordinator_bmn_nama})', '(${peminjam_kembali})', '(${pj_kembali})', '(${nama_peminjam})'],
+            ['${peminjam_nama}', '${pj_nama}', '${koordinator_nama}', '${koordinator_bmn_nama}', '${peminjam_kembali}', '${pj_kembali}', '${nama_peminjam}'],
+            $xml
+        );
+        $xml = preg_replace('/\(\s*\.{3,}\s*\)/', '', $xml);
 
         preg_match_all('/<w:tr[^>]*>.*?<\/w:tr>/s', $xml, $matches);
         $rows = $matches[0];

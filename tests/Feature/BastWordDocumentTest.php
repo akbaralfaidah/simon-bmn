@@ -80,6 +80,12 @@ class BastWordDocumentTest extends TestCase
         $this->assertTrue($loaded, 'word/document.xml must be well-formed XML: '.json_encode($xmlErrors));
         $this->assertEmpty($xmlErrors, 'There must be no XML parsing errors in word/document.xml');
 
+        $this->assertStringContainsString('w:code="9"', $documentXml, 'Document must specify A4 paper code');
+        $this->assertStringContainsString('w:w="11906"', $documentXml, 'Document must specify A4 width');
+        $this->assertStringContainsString('w:h="16838"', $documentXml, 'Document must specify A4 height');
+        $this->assertStringNotContainsString('(Budi Pratama', $documentXml, 'Names must not have parentheses');
+        $this->assertStringNotContainsString('( Budi Pratama', $documentXml, 'Names must not have parentheses');
+
         $zip->close();
         @unlink($outputPath);
     }

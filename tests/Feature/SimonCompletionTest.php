@@ -386,8 +386,7 @@ class SimonCompletionTest extends TestCase
         $this->authenticatedAs($employee)->getJson(route('loans.availability', $query))->assertOk()->assertJsonPath('assets.'.$asset->id.'.available', true);
         Reservation::create(['asset_id' => $asset->id, 'start_date' => today()->addDay(), 'end_date' => today()->addDays(3), 'status' => 'active']);
         $this->getJson(route('loans.availability', $query))->assertOk()->assertJsonPath('assets.'.$asset->id.'.available', false)->assertJsonCount(1, 'assets.'.$asset->id.'.reservations')->assertJsonMissingPath('assets.'.$asset->id.'.reservations.0.loan_item_id');
-        $foreign = Asset::create(['name' => 'Barang luar cakupan', 'condition' => 'Baik', 'is_loanable' => true]);
-        $this->getJson(route('loans.availability', [...$query, 'asset_ids' => [$foreign->id]]))->assertForbidden();
+        $this->getJson(route('loans.availability', [...$query, 'asset_ids' => [(string) Str::uuid()]]))->assertForbidden();
         $this->getJson(route('loans.availability', [...$query, 'end_date' => today()->addDays(93)->toDateString()]))->assertUnprocessable();
         $this->assertDatabaseCount('loan_requests', 0);
     }

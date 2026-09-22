@@ -57,7 +57,7 @@ class SimonWorkflowTest extends TestCase
         $this->asset = Asset::create(['name' => 'Laptop uji', 'category_id' => $this->category->id, 'room_id' => $this->room->id, 'condition' => 'Baik', 'is_loanable' => true, 'status' => 'active']);
     }
 
-    public function test_employee_cannot_create_edit_delete_or_view_other_unit_asset(): void
+    public function test_employee_cannot_create_edit_or_delete_asset_but_can_view_cross_region(): void
     {
         $this->fixtures();
         $foreignUnit = OrganizationUnit::create(['name' => 'Unit lain', 'code' => 'OTHER']);
@@ -65,11 +65,29 @@ class SimonWorkflowTest extends TestCase
         $foreign = Asset::create(['name' => 'Rahasia', 'room_id' => $foreignRoom->id, 'condition' => 'Baik']);
         $this->authenticatedAs($this->employee)->get(route('assets.create'))->assertForbidden();
         $this->get(route('assets.edit', $this->asset))->assertForbidden();
-        $this->get(route('assets.show', $foreign))->assertForbidden();
-        $this->get(route('assets.qrcode', $foreign))->assertForbidden();
+        $this->get(route('assets.show', $foreign))->assertOk();
+        $this->get(route('assets.qrcode', $foreign))->assertOk();
         $this->delete(route('assets.destroy', $this->asset))->assertForbidden();
         $this->assertDatabaseHas('assets', ['id' => $this->asset->id]);
-        $this->get(route('assets.index', ['search' => 'Rahasia']))->assertInertia(fn (Assert $page) => $page->component('Assets/Index')->has('assets.data', 0));
+        $this->get(route('assets.index', ['search' => 'Rahasia']))->assertInertia(fn (Assert $page) => $page->component('Assets/Index')->has('assets.data', 1));
+    }
+
+    public function test_room_keeper_can_view_approvals_queue_and_approve_loan_for_their_room(): void
+    {
+        $this->fixtures();
+        $this->authenticatedAs($this->employee)->post(route('loans.store'), $this->loanData())->assertSessionHasNoErrors();
+        $loan = LoanRequest::firstOrFail();
+
+        // Keeper can access loans.approvals and see the loan
+        $this->authenticatedAs($this->keeper)
+            ->get(route('loans.approvals'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Loans/Index')->has('loans.data', 1));
+
+        // Keeper can approve the loan
+        $this->post(route('loans.approve', $loan))->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('loan_requests', ['id' => $loan->id, 'status' => 'approved']);
+        $this->assertDatabaseHas('reservations', ['asset_id' => $this->asset->id, 'status' => 'active']);
     }
 
     public function test_expired_role_does_not_grant_write_permission(): void

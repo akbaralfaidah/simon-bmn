@@ -74,7 +74,11 @@ class AccessScope
 
     public function assets(User $user, bool $operational = false): Builder
     {
-        if ($this->global($user)) {
+        if ($user->status !== 'active') {
+            return Asset::whereRaw('1 = 0');
+        }
+
+        if (! $operational || $this->global($user)) {
             return Asset::query();
         }
 
@@ -101,7 +105,7 @@ class AccessScope
     public function decideLoan(User $user, LoanRequest $loan): bool
     {
         return $loan->user_id !== $user->id && $loan->items->isNotEmpty() && $loan->items->every(
-            fn ($item) => $this->coordinate($user, $item->asset)
+            fn ($item) => $this->coordinate($user, $item->asset) || $this->inspect($user, $item->asset)
         );
     }
 }

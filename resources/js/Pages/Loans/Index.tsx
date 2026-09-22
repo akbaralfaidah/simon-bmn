@@ -33,16 +33,18 @@ export default function Index({ loans, approvalMode }: { loans: Paginated<any>; 
                         key={loan.id} 
                         href={route('loans.show', loan.id)}
                     >
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex items-center gap-2.5">
-                                <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded shrink-0">
                                     #{loan.id}
                                 </span>
-                                <h2 className="font-semibold text-slate-900 text-sm sm:text-base">
+                                <h2 className="font-semibold text-slate-900 text-sm sm:text-base truncate">
                                     {loan.purpose}
                                 </h2>
                             </div>
-                            <StatusBadge status={loan.status} />
+                            <div className="flex items-center gap-1.5 shrink-0 flex-wrap sm:justify-end">
+                                <StatusBadge status={loan.status} type="loan" />
+                            </div>
                         </div>
                         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
                             <span>Pemohon: <strong className="font-medium text-slate-700">{loan.user?.name}</strong></span>

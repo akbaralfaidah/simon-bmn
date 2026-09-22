@@ -18,7 +18,7 @@ export default function Authenticated({ header, children }: PropsWithChildren<{ 
         { name: 'Beranda', url: route('dashboard'), icon: LayoutDashboard },
         { name: 'Katalog aset', url: route('assets.index'), icon: Package },
         { name: 'Peminjaman', url: route('loans.index'), icon: ArrowRightLeft },
-        ...(auth.can.coordinate ? [{ name: 'Persetujuan', url: route('loans.approvals'), icon: ShieldCheck }] : []),
+        ...(operational ? [{ name: 'Persetujuan', url: route('loans.approvals'), icon: ShieldCheck }] : []),
         { name: 'Penetapan pemegang', url: route('workspace.index', 'custody'), icon: UserCheck },
         { name: 'Lapor kerusakan', url: route('workspace.index', 'incidents'), icon: AlertTriangle },
         ...(operational ? [
@@ -155,6 +155,18 @@ export default function Authenticated({ header, children }: PropsWithChildren<{ 
                         <button className="p-2 lg:hidden text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-[0.98] transition-all duration-150 ease-out rounded-lg" aria-label="Buka menu" onClick={() => setOpen(true)}>
                             <Menu size={20} />
                         </button>
+
+                        <Link 
+                            href={route('dashboard')} 
+                            className="flex items-center gap-2 lg:hidden py-1 px-1.5 -ml-2 rounded-lg hover:bg-slate-100 active:scale-95 transition-all duration-150 ease-out"
+                            aria-label="Kembali ke beranda"
+                        >
+                            <img src="/images/logo-gakkum.webp" alt="Logo Gakkum" className="h-7 w-auto object-contain" />
+                            <div className="flex flex-col">
+                                <span className="font-bold text-sm tracking-tight text-slate-900 leading-none">SIMON</span>
+                                <span className="text-[9px] text-slate-500 tracking-wider uppercase font-semibold leading-tight">Gakkum</span>
+                            </div>
+                        </Link>
                         
                         <div className="hidden xl:flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
                             <Shield className="text-primary" size={15} />
