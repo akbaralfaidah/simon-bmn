@@ -27,10 +27,14 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-# BMN Original Docs
+# BMN Original Docs & Internal Files
 *.xlsx
 *.pdf
 *.png
+*.docx
+*.doc
+*.csv
+!resources/templates/**
 LAPORAN_INVENTARIS_FILE.md
 BAST BMN KLH - Balai Sum/
 BAST BMN LIQUIDASI KLHK/
@@ -38,3 +42,33 @@ BAST_Laptop KLH/
 Data SPIP/
 SOP BMN/
 prd.md
+
+# AI Agent, Skills, & IDE
+/.agents/
+/.claude/
+/.gemini/
+/DESIGN.md
+
+# Demo & Sensitive Seeders
+/database/seeders/DemoUserSeeder.php
+
+# Scratch, Temporary & Prototype Files
+scratch*.php
+scratch*.html
+/scratch/
+/contoh_design/
+
+# Local Databases & Dumps
+*.sqlite
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.sql
+*.sql.gz
+
+# Python & Build Caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

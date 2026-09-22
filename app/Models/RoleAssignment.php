@@ -34,4 +34,14 @@ class RoleAssignment extends Model
     {
         return $this->belongsTo(Role::class);
     }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(OrganizationUnit::class, 'unit_id');
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class, 'room_id');
+    }
 }

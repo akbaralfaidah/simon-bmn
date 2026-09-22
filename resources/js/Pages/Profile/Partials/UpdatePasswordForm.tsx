@@ -129,9 +129,9 @@ export default function UpdatePasswordForm({
 
                     <Transition
                         show={recentlySuccessful}
-                        enter="transition ease-in-out"
+                        enter="transition ease-out duration-150"
                         enterFrom="opacity-0"
-                        leave="transition ease-in-out"
+                        leave="transition ease-out duration-150"
                         leaveTo="opacity-0"
                     >
                         <p className="text-sm text-gray-600">

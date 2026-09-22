@@ -21,6 +21,8 @@ export default function UpdateProfileInformation({
         useForm({
             name: user.name,
             email: user.email,
+            nip: user.profile?.nip ?? '',
+            phone: user.profile?.phone ?? '',
         });
 
     const submit: FormEventHandler = (e) => {
@@ -37,7 +39,7 @@ export default function UpdateProfileInformation({
                 </h2>
 
                 <p className="mt-1 text-sm text-gray-600">
-                    Perbarui nama dan email akunmu. Perubahan email memerlukan verifikasi ulang.
+                    Perbarui nama, NIP, nomor telepon, dan email akunmu. Perubahan email memerlukan verifikasi ulang.
                 </p>
             </header>
 
@@ -56,6 +58,42 @@ export default function UpdateProfileInformation({
                     />
 
                     <InputError className="mt-2" message={errors.name} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="nip" value="NIP (Nomor Induk Pegawai)" />
+
+                    <TextInput
+                        id="nip"
+                        className="mt-1 block w-full font-mono"
+                        value={data.nip}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (!val.includes('@')) {
+                                setData('nip', val);
+                            }
+                        }}
+                        autoComplete="off"
+                        inputMode="numeric"
+                        placeholder="18 digit angka NIP (kosongkan jika tidak ada)"
+                    />
+
+                    <InputError className="mt-2" message={(errors as any).nip} />
+                </div>
+
+                <div>
+                    <InputLabel htmlFor="phone" value="Nomor WhatsApp / HP" />
+
+                    <TextInput
+                        id="phone"
+                        className="mt-1 block w-full"
+                        value={data.phone}
+                        onChange={(e) => setData('phone', e.target.value)}
+                        autoComplete="tel"
+                        placeholder="Contoh: 081234567890"
+                    />
+
+                    <InputError className="mt-2" message={(errors as any).phone} />
                 </div>
 
                 <div>
@@ -101,9 +139,9 @@ export default function UpdateProfileInformation({
 
                     <Transition
                         show={recentlySuccessful}
-                        enter="transition ease-in-out"
+                        enter="transition ease-out duration-150"
                         enterFrom="opacity-0"
-                        leave="transition ease-in-out"
+                        leave="transition ease-out duration-150"
                         leaveTo="opacity-0"
                     >
                         <p className="text-sm text-gray-600">

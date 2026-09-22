@@ -26,6 +26,17 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'nip' => [
+                'nullable',
+                'string',
+                'max:30',
+                function ($attribute, $value, $fail) {
+                    if ($value !== null && (str_contains($value, '@') || $value === $this->user()->email)) {
+                        $fail('Format NIP tidak boleh berupa alamat email.');
+                    }
+                },
+            ],
+            'phone' => ['nullable', 'string', 'max:30'],
         ];
     }
 }

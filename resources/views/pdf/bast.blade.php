@@ -32,6 +32,29 @@ Periode: {{ data_get($bast->snapshot, 'start_date', '-') }} s.d. {{ data_get($ba
     </tbody>
 </table>
 <p>Data di atas merupakan rekaman pada saat dokumen dibuat. Verifikasi identitas, kelengkapan dan kondisi fisik sebelum penandatanganan.</p>
-<table class="sign"><tr><td>Yang menyerahkan<br><br><br><br>(__________________)</td><td>Yang menerima<br><br><br><br>(__________________)</td></tr></table>
+@if($bast->bast_type === 'loan')
+<table class="sign">
+    <tr>
+        <td style="width: 33%;">Yang Meminjam / Menerima<br><br><br><br>({{ data_get($bast->snapshot, 'receiver', '-') }})</td>
+        <td style="width: 33%;">Menyetujui<br>Koordinator BMN<br><br><br>({{ data_get($bast->snapshot, 'approver', '-') }})</td>
+        <td style="width: 33%;">Yang Menyerahkan<br>Penanggung Jawab Ruangan<br><br><br>(__________________)</td>
+    </tr>
+</table>
+@elseif($bast->bast_type === 'return')
+<table class="sign">
+    <tr>
+        <td style="width: 33%;">Yang Mengembalikan<br>Peminjam Barang<br><br><br><br>({{ data_get($bast->snapshot, 'issuer', '-') }})</td>
+        <td style="width: 33%;">Mengetahui<br>Koordinator BMN<br><br><br><br>({{ data_get($bast->snapshot, 'approver', '-') }})</td>
+        <td style="width: 33%;">Yang Menerima<br>Penanggung Jawab Ruangan<br><br><br><br>({{ data_get($bast->snapshot, 'receiver', '-') }})</td>
+    </tr>
+</table>
+@else
+<table class="sign">
+    <tr>
+        <td>Yang menyerahkan<br><br><br><br>({{ data_get($bast->snapshot, 'issuer', '-') }})</td>
+        <td>Yang menerima<br><br><br><br>({{ data_get($bast->snapshot, 'receiver', '-') }})</td>
+    </tr>
+</table>
+@endif
 </body>
 </html>

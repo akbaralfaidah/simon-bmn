@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Asset;
 use App\Models\AssetCategory;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -64,11 +65,13 @@ class AssetSeeder extends Seeder
         foreach ($laptops as $item) {
             $laptopName = $item['laptop_new'] ?: $item['laptop_old'];
             $nup = $item['nup_new'] ?: $item['nup_old'];
-            if (!$laptopName || $laptopName === 'None') continue;
+            if (! $laptopName || $laptopName === 'None') {
+                continue;
+            }
 
             Asset::create([
                 'id' => Str::uuid(),
-                'name' => 'Laptop ' . trim($laptopName),
+                'name' => 'Laptop '.trim($laptopName),
                 'category_id' => $laptopCat->id,
                 'nup' => $nup !== 'None' ? $nup : null,
                 'brand_type' => trim($laptopName),
@@ -77,26 +80,41 @@ class AssetSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Imported ' . Asset::count() . ' assets total.');
+        $this->command->info('Imported '.Asset::count().' assets total.');
     }
 
     private function detectCategory(string $name): string
     {
         $name = strtolower($name);
-        if (str_contains($name, 'laptop') || str_contains($name, 'notebook')) return 'Laptop';
-        if (str_contains($name, 'printer') || str_contains($name, 'epson') || str_contains($name, 'canon')) return 'Printer';
-        if (str_contains($name, 'penghancur')) return 'Alat Penghancur Kertas';
-        if (str_contains($name, 'kendaraan') || str_contains($name, 'mobil') || str_contains($name, 'motor')) return 'Kendaraan Dinas';
-        if (str_contains($name, 'meja') || str_contains($name, 'kursi') || str_contains($name, 'lemari') || str_contains($name, 'rak')) return 'Perabotan Kantor';
-        if (str_contains($name, 'server') || str_contains($name, 'switch') || str_contains($name, 'router') || str_contains($name, 'ups') || str_contains($name, 'monitor')) return 'Peralatan IT';
+        if (str_contains($name, 'laptop') || str_contains($name, 'notebook')) {
+            return 'Laptop';
+        }
+        if (str_contains($name, 'printer') || str_contains($name, 'epson') || str_contains($name, 'canon')) {
+            return 'Printer';
+        }
+        if (str_contains($name, 'penghancur')) {
+            return 'Alat Penghancur Kertas';
+        }
+        if (str_contains($name, 'kendaraan') || str_contains($name, 'mobil') || str_contains($name, 'motor')) {
+            return 'Kendaraan Dinas';
+        }
+        if (str_contains($name, 'meja') || str_contains($name, 'kursi') || str_contains($name, 'lemari') || str_contains($name, 'rak')) {
+            return 'Perabotan Kantor';
+        }
+        if (str_contains($name, 'server') || str_contains($name, 'switch') || str_contains($name, 'router') || str_contains($name, 'ups') || str_contains($name, 'monitor')) {
+            return 'Peralatan IT';
+        }
+
         return 'Peralatan Kantor';
     }
 
     private function parseDate(?string $date): ?string
     {
-        if (!$date || $date === 'None') return null;
+        if (! $date || $date === 'None') {
+            return null;
+        }
         try {
-            return \Carbon\Carbon::parse($date)->format('Y-m-d');
+            return Carbon::parse($date)->format('Y-m-d');
         } catch (\Exception $e) {
             return null;
         }

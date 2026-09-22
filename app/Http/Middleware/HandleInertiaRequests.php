@@ -17,7 +17,7 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
-        $user = $request->user();
+        $user = $request->user()?->loadMissing('profile');
         $scope = app(AccessScope::class);
 
         return [

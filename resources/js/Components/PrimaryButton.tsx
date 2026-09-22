@@ -1,21 +1,25 @@
 import { ButtonHTMLAttributes } from 'react';
+import { Loader2 } from 'lucide-react';
+
+interface PrimaryButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+    isLoading?: boolean;
+}
 
 export default function PrimaryButton({
     className = '',
     disabled,
+    isLoading = false,
     children,
     ...props
-}: ButtonHTMLAttributes<HTMLButtonElement>) {
+}: PrimaryButtonProps) {
     return (
         <button
             {...props}
-            className={
-                `inline-flex items-center rounded-md border border-transparent bg-primary px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white transition duration-150 ease-in-out hover:bg-opacity-90 focus:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:bg-primary ${
-                    disabled && 'opacity-25'
-                } ` + className
-            }
-            disabled={disabled}
+            aria-busy={isLoading}
+            className={`simon-button ${className}`}
+            disabled={disabled || isLoading}
         >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {children}
         </button>
     );

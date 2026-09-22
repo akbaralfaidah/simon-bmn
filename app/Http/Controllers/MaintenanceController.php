@@ -38,7 +38,7 @@ class MaintenanceController extends Controller
                 } else {
                     $item = LoanItem::whereKey($incident->data['loan_item_id'] ?? null)->where('asset_id', $asset->id)->firstOrFail();
                     abort_if($item->request->user_id === $request->user()->id, 403, 'Peminjam tidak boleh menangani tindak lanjut pinjamannya sendiri.');
-                    abort_unless($item->status === 'inspected' && $item->physically_received_at, 422, 'Barang harus sudah diterima dan diperiksa PJ.');
+                    abort_unless(in_array($item->status, ['inspected', 'needs_repair']) && $item->physically_received_at, 422, 'Barang harus sudah diterima dan diperiksa PJ.');
                 }
             }
             $occupancies = $asset->occupancies()->where('is_active', true);

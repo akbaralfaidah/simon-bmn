@@ -161,3 +161,15 @@ Before relying on a package's API, confirm its installed version:
 - IMPORTANT: Activate `inertia-react-development` when working with Inertia React client-side patterns.
 
 </laravel-boost-guidelines>
+
+<!-- antislop:start -->
+## antislop
+For UI, copy, people, mobile layout, or code comments work, load the antislop skill for the task:
+- Core filter, always on: `antislop`
+- UI / visual: `antislop-ui`
+- Copy & text: `antislop-copywriting`
+- People: `antislop-human`
+- Code comments: `antislop-code`
+- Mobile / responsive: `antislop-layoutmobile`
+Before starting, ask the user when antislop applies: during the work, or after it is done.
+<!-- antislop:end -->

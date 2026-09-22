@@ -46,10 +46,34 @@ class WorkspaceController extends Controller
         $assets = $this->scope->assets($request->user());
         $rooms = $this->scope->roomIds($request->user(), true, AccessScope::COORDINATORS);
 
+        $accountApprovals = 0;
+        if ($this->scope->administer($request->user()) || $request->user()->hasRole(AccessScope::COORDINATORS)) {
+            if ($this->scope->global($request->user())) {
+                $accountApprovals = User::where('status', 'pending')->count();
+            } else {
+                $unitIds = $this->scope->administrativeUnitIds($request->user());
+                if (empty($unitIds)) {
+                    $unitIds = $this->scope->assignments($request->user(), AccessScope::COORDINATORS)
+                        ->whereNull('room_id')
+                        ->pluck('unit_id')
+                        ->filter()
+                        ->all();
+                }
+                $accountApprovals = User::where('status', 'pending')
+                    ->when(! empty($unitIds), fn ($query) => $query->whereHas('profile', fn ($q) => $q->whereIn('unit_id', $unitIds)))
+                    ->count();
+            }
+        }
+
         return Inertia::render('Dashboard', [
-            'stats' => ['total' => (clone $assets)->count(), 'kondisi_baik' => (clone $assets)->where('condition', 'Baik')->count(), 'kondisi_rusak' => (clone $assets)->where('condition', '!=', 'Baik')->count(),
+            'stats' => [
+                'total' => (clone $assets)->count(),
+                'kondisi_baik' => (clone $assets)->where('condition', 'Baik')->count(),
+                'kondisi_rusak' => (clone $assets)->where('condition', '!=', 'Baik')->count(),
                 'my_loans' => LoanRequest::where('user_id', $request->user()->id)->whereIn('status', ['active', 'approved', 'returning'])->count(),
-                'approvals' => LoanRequest::where('status', 'pending_approval')->where('user_id', '!=', $request->user()->id)->whereHas('items')->whereDoesntHave('items.asset', fn ($query) => $query->whereNull('room_id')->orWhereNotIn('room_id', $rooms))->count()],
+                'approvals' => LoanRequest::where('status', 'pending_approval')->where('user_id', '!=', $request->user()->id)->whereHas('items')->whereDoesntHave('items.asset', fn ($query) => $query->whereNull('room_id')->orWhereNotIn('room_id', $rooms))->count(),
+                'account_approvals' => $accountApprovals,
+            ],
             'recentLoans' => LoanRequest::where('user_id', $request->user()->id)->latest()->limit(5)->get(['id', 'purpose', 'start_date', 'end_date', 'status']),
         ]);
     }

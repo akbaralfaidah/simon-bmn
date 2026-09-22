@@ -26,7 +26,7 @@ class WorkflowService
             $loan->load('items.asset');
             abort_unless($this->scope->viewLoan($actor, $loan), 403);
             $before = $loan->status;
-            if (in_array($action, ['approve', 'reject', 'revise', 'close', 'cancel-item', 'approve-extension', 'reject-extension'], true)) {
+            if (in_array($action, ['approve', 'reject', 'revise', 'close', 'approve-extension', 'reject-extension'], true)) {
                 abort_unless($this->scope->decideLoan($actor, $loan), 403);
             }
             if ($action === 'approve') {
@@ -51,6 +51,7 @@ class WorkflowService
                 $items = $loan->items->whereIn('id', $data['item_ids']);
                 $this->require($items->count() === count($data['item_ids']), 'Barang tidak termasuk dalam pengajuan.');
                 foreach ($items as $item) {
+                    abort_unless($this->scope->coordinate($actor, $item->asset) || $this->scope->inspect($actor, $item->asset), 403);
                     $this->require(in_array($item->status, ['approved', 'prepared']) && ! $item->handed_at, 'Hanya item belum diserahkan yang dapat dibatalkan.');
                     $item->update(['status' => 'cancelled', 'notes' => $data['reason']]);
                     $item->reservation()->where('status', 'active')->update(['status' => 'cancelled']);
@@ -96,15 +97,23 @@ class WorkflowService
                         $item->update(['status' => 'active', 'accepted_at' => now()]);
                         $loan->update(['status' => 'active']);
                     } elseif ($action === 'request-return') {
-                        $this->require($item->status === 'active', 'Hanya barang yang sedang dipinjam dapat dikembalikan.');
+                        $this->require(in_array($item->status, ['active', 'needs_repair']), 'Hanya barang yang sedang dipinjam atau perlu perbaikan yang dapat diajukan pengembalian.');
                         $item->update(['status' => 'return_requested', 'return_requested_at' => now(), 'notes' => $data['notes'] ?? null]);
                         $loan->update(['status' => 'returning']);
                     } elseif ($action === 'inspect') {
                         $this->require($item->status === 'return_requested', 'Peminjam belum mengajukan pengembalian.');
-                        $item->update(['status' => 'inspected', 'condition_after' => $data['condition'], 'inspected_by' => $actor->id, 'physically_received_at' => now(), 'inspected_at' => now(), 'notes' => $data['notes'] ?? null]);
+                        $isGood = $data['condition'] === 'Baik' && ($data['completeness'] ?? 'complete') === 'complete';
+                        $item->update([
+                            'status' => $isGood ? 'inspected' : 'needs_repair',
+                            'condition_after' => $data['condition'],
+                            'inspected_by' => $actor->id,
+                            'physically_received_at' => now(),
+                            'inspected_at' => now(),
+                            'notes' => $data['notes'] ?? null,
+                            'checklist' => [...($item->checklist ?? []), 'return_completeness' => $data['completeness'], 'return_notes' => $data['notes'] ?? null],
+                        ]);
                         $item->asset->update(['condition' => $data['condition']]);
-                        $item->update(['checklist' => [...($item->checklist ?? []), 'return_completeness' => $data['completeness'], 'return_notes' => $data['notes'] ?? null]]);
-                        if ($data['condition'] !== 'Baik' || $data['completeness'] === 'incomplete') {
+                        if (! $isGood) {
                             $incident = WorkRecord::create([
                                 'kind' => 'incidents', 'title' => 'Tindak lanjut pengembalian #'.$loan->id,
                                 'asset_id' => $item->asset_id, 'unit_id' => $item->asset->room?->unit_id,
@@ -114,13 +123,31 @@ class WorkflowService
                                     'condition_after' => $data['condition'], 'completeness' => $data['completeness'], 'notes' => $data['notes'] ?? null],
                             ]);
                             AuditEvent::record($incident, 'incidents.return_reported', ['loan_item_id' => $item->id], $incident->unit_id);
+                        } else {
+                            $pendingIncidents = WorkRecord::where('kind', 'incidents')
+                                ->where('asset_id', $item->asset_id)
+                                ->where('data->loan_item_id', $item->id)
+                                ->whereIn('status', ['submitted', 'approved'])
+                                ->get();
+                            foreach ($pendingIncidents as $inc) {
+                                $incData = $inc->data ?? [];
+                                $incData['resolution'] = 'Barang telah diperbaiki peminjam dan diverifikasi dalam kondisi Baik oleh PJ Ruangan.';
+                                $incData['checked_by'] = $actor->id;
+                                $incData['checked_condition'] = 'Baik';
+                                $inc->update(['status' => 'resolved', 'data' => $incData]);
+                                AuditEvent::record($inc, 'incidents.resolved', ['resolution' => $incData['resolution']], $inc->unit_id);
+                            }
+
+                            $hasBast = Bast::whereMorphedTo('reference', $loan)->where('bast_type', 'return')->whereJsonContains('snapshot->item_ids', $item->id)->exists();
+                            if (! $hasBast) {
+                                $this->document($loan, $actor, 'return', [$item->id]);
+                            }
                         }
-                        $this->document($loan, $actor, 'return', [$item->id]);
                     } elseif ($action === 'close') {
                         $this->require($item->status === 'inspected', 'PJ harus memeriksa pengembalian terlebih dahulu.');
                         $this->require(! $item->media()->whereNull('replacement_media_id')->where(fn ($query) => $query->where('processing_status', '!=', 'ready')->orWhere('scan_status', '!=', 'clean'))->exists(), 'Tunggu pemeriksaan seluruh foto bukti sebelum penutupan.');
                         $this->require(Bast::whereMorphedTo('reference', $loan)->where('bast_type', 'return')->where('status', 'verified')->whereJsonContains('snapshot->item_ids', $item->id)->exists(), 'Unggah dan verifikasi BAST pengembalian untuk barang ini sebelum penutupan.');
-                        $this->require(! WorkRecord::where('kind', 'incidents')->where('asset_id', $item->asset_id)->whereIn('status', ['submitted', 'approved'])->exists(), 'Selesaikan insiden barang sebelum penutupan.');
+                        $this->require(! WorkRecord::where('kind', 'incidents')->where('asset_id', $item->asset_id)->whereIn('status', ['submitted', 'approved'])->exists(), 'Selesaikan insiden perbaikan barang sebelum penutupan peminjaman.');
                         $item->update(['status' => 'returned', 'closed_at' => now()]);
                         $item->reservation()->where('status', 'active')->update(['status' => 'fulfilled']);
                         AssetOccupancy::where('asset_id', $item->asset_id)->where('user_id', $loan->user_id)->where('occupancy_type', 'loan')->where('is_active', true)->update(['is_active' => false, 'ends_at' => now()]);
@@ -173,8 +200,9 @@ class WorkflowService
             'status' => 'draft', 'issued_by' => $actor->id, 'received_by' => $loan->user_id,
             'snapshot' => ['purpose' => $loan->purpose, 'start_date' => $loan->start_date, 'end_date' => $loan->end_date,
                 'issuer' => $type === 'return' ? $loan->user->name : $actor->name, 'receiver' => $type === 'return' ? $actor->name : $loan->user->name,
+                'approver' => $type === 'return' ? $loan->coordinator?->name : $actor->name,
                 'template_version' => 1, 'item_ids' => $itemIds ?? $loan->items()->pluck('id')->all(),
-                'items' => $loan->items()->when($itemIds, fn ($query) => $query->whereIn('id', $itemIds))->with('asset')->get()->map(fn ($item) => $item->asset->only(['id', 'name', 'item_code', 'nup', 'condition']))->all()],
+                'items' => $loan->items()->when($itemIds, fn ($query) => $query->whereIn('id', $itemIds))->with('asset')->get()->map(fn ($item) => $item->asset->only(['id', 'name', 'item_code', 'nup', 'condition', 'brand_type', 'satker_code']))->all()],
         ]);
     }
 

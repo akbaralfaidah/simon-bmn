@@ -3,6 +3,13 @@ export interface User {
     name: string;
     email: string;
     email_verified_at?: string;
+    profile?: {
+        id?: number;
+        nip?: string | null;
+        phone?: string | null;
+        unit_id?: number | null;
+        unit?: { id: number; name: string };
+    } | null;
 }
 
 export type PageProps<

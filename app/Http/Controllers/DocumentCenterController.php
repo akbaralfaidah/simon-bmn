@@ -12,6 +12,7 @@ use App\Models\WorkRecord;
 use App\Services\AccessScope;
 use App\Services\DocumentService;
 use App\Services\UploadScanner;
+use App\Services\WordTemplateService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,6 +64,14 @@ class DocumentCenterController extends Controller
             AuditEvent::record($document, 'document.downloaded');
 
             return Storage::disk('local')->download($document->signed_pdf_path, $document->bast_number.'.pdf', ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
+        }
+
+        if ($document->reference instanceof LoanRequest) {
+            $path = app(WordTemplateService::class)->generateBastDocument($document);
+
+            return response()->download($path, $document->bast_number.'-draf.docx', [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ])->deleteFileAfterSend(true);
         }
 
         return Pdf::setOptions(['isRemoteEnabled' => false, 'isPhpEnabled' => false])->loadView('pdf.bast', ['bast' => $document])->stream($document->bast_number.'-draf.pdf');

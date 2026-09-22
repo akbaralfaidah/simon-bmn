@@ -16,8 +16,12 @@ use App\Models\RoleAssignment;
 use App\Models\Room;
 use App\Models\User;
 use App\Models\WorkRecord;
+use App\Notifications\AccountDeleted;
+use App\Notifications\AccountStatusUpdated;
+use App\Notifications\AssignmentUpdated;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
 use Tests\TestCase;
@@ -111,6 +115,7 @@ class SimonOperationsTest extends TestCase
 
     public function test_activation_requires_administrative_mandate_and_verified_email(): void
     {
+        Notification::fake();
         $this->fixtures();
         $this->employee->forceFill(['status' => 'pending', 'email_verified_at' => null])->save();
         $this->authenticatedAs($this->coordinator)->post(route('administration.user', $this->employee), ['status' => 'active', 'reason' => 'Verifikasi'])->assertForbidden();
@@ -119,6 +124,32 @@ class SimonOperationsTest extends TestCase
         $this->employee->forceFill(['email_verified_at' => now()])->save();
         $this->post(route('administration.user', $this->employee), ['status' => 'active', 'reason' => 'Email dan identitas cocok'])->assertSessionHasNoErrors();
         $this->assertSame('active', $this->employee->fresh()->status);
+        Notification::assertSentTo($this->employee, AccountStatusUpdated::class, function ($notification) {
+            return $notification->status === 'active' && $notification->reason === 'Email dan identitas cocok';
+        });
+
+        // Test activation without providing explicit reason succeeds
+        $this->employee->forceFill(['status' => 'pending'])->save();
+        $this->post(route('administration.user', $this->employee), ['status' => 'active'])->assertSessionHasNoErrors();
+        $this->assertSame('active', $this->employee->fresh()->status);
+    }
+
+    public function test_account_status_updated_notification_renders_mail(): void
+    {
+        $this->fixtures();
+        $notification = new AccountStatusUpdated(
+            status: 'active',
+            reason: 'Berkas telah divalidasi',
+            role: 'Pegawai',
+            unitName: 'Seksi Wilayah II',
+            updatedBy: 'Koordinator BMN',
+        );
+
+        $mail = $notification->toMail($this->employee);
+        $this->assertStringContainsString('Akun SIMON BMN Anda Telah Diaktifkan', $mail->subject);
+        $rendered = $mail->render();
+        $this->assertStringContainsString('Akun Kedinasan Anda Telah Diaktifkan', $rendered);
+        $this->assertStringContainsString('Berkas telah divalidasi', $rendered);
     }
 
     public function test_room_keeper_cannot_read_other_rooms_incident(): void
@@ -182,6 +213,65 @@ class SimonOperationsTest extends TestCase
         $this->get(route('media.show', $media))->assertOk()->assertHeader('Content-Type', 'image/webp');
         $outsider = User::factory()->create();
         $this->actingAs($outsider)->get(route('media.show', $media))->assertNotFound();
+    }
+
+    public function test_coordinator_can_update_assignment_and_sends_notification(): void
+    {
+        Notification::fake();
+        $this->fixtures();
+        $this->coordinator->roleAssignments()->update(['can_administer' => true]);
+        $assignment = $this->keeper->roleAssignments()->firstOrFail();
+
+        $this->authenticatedAs($this->coordinator)->post(route('administration.assignment.update', $assignment), [
+            'role' => 'Penanggung Jawab Ruangan',
+            'unit_id' => $this->room->unit_id,
+            'room_id' => $this->room->id,
+            'ends_at' => now()->addMonths(6)->toDateString(),
+            'reason' => 'Perpanjangan mandat semester depan',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame($this->room->id, $assignment->fresh()->room_id);
+        Notification::assertSentTo($this->keeper, AssignmentUpdated::class, function ($notification) {
+            return $notification->action === 'updated' && $notification->roleName === 'Penanggung Jawab Ruangan';
+        });
+    }
+
+    public function test_coordinator_can_revoke_assignment_and_sends_notification(): void
+    {
+        Notification::fake();
+        $this->fixtures();
+        $this->coordinator->roleAssignments()->update(['can_administer' => true]);
+        $assignment = $this->keeper->roleAssignments()->firstOrFail();
+
+        $response = $this->authenticatedAs($this->coordinator)->post(route('administration.assignment.revoke', $assignment), [
+            'reason' => 'Mandat dialihkan ke petugas lain',
+            'current_password' => 'password',
+        ]);
+        $response->assertSessionHasNoErrors();
+
+        $this->assertNotNull($assignment->fresh()->ends_at);
+        Notification::assertSentTo($this->keeper, AssignmentUpdated::class, function ($notification) {
+            return $notification->action === 'revoked';
+        });
+    }
+
+    public function test_coordinator_can_destroy_user_and_sends_notification(): void
+    {
+        Notification::fake();
+        $this->fixtures();
+        $this->coordinator->roleAssignments()->update(['can_administer' => true]);
+        $email = $this->employee->email;
+
+        $response = $this->authenticatedAs($this->coordinator)->delete(route('administration.user.destroy', $this->employee), [
+            'reason' => 'Pegawai mutasi ke instansi lain',
+            'current_password' => 'password',
+        ]);
+        $response->assertSessionHasNoErrors();
+
+        $this->assertDatabaseMissing('users', ['email' => $email]);
+        Notification::assertSentOnDemand(AccountDeleted::class, function ($notification) use ($email) {
+            return $notification->userEmail === $email && $notification->reason === 'Pegawai mutasi ke instansi lain';
+        });
     }
 
     private function fixtures(): void

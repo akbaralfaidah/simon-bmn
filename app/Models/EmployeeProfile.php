@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,17 @@ class EmployeeProfile extends Model
         'unit_id',
         'nip',
         'phone',
+        'signature_path',
     ];
+
+    protected $appends = [
+        'has_signature',
+    ];
+
+    public function getHasSignatureAttribute(): bool
+    {
+        return ! empty($this->signature_path);
+    }
 
     public function user(): BelongsTo
     {

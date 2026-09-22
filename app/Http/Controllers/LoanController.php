@@ -10,8 +10,8 @@ use App\Models\User;
 use App\Models\WorkRecord;
 use App\Services\AccessScope;
 use App\Services\UploadScanner;
+use App\Services\WordTemplateService;
 use App\Services\WorkflowService;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,6 +23,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LoanController extends Controller
 {
@@ -45,18 +46,63 @@ class LoanController extends Controller
         return Inertia::render('Loans/Index', ['loans' => $loans->latest()->paginate(15)->withQueryString(), 'approvalMode' => $request->routeIs('loans.approvals')]);
     }
 
+    private function getStrictlyAvailableAssetsQuery(User $user, int|string|null $exceptLoanId = null)
+    {
+        return $this->scope->assets($user)
+            ->where('status', 'active')
+            ->where('condition', 'Baik')
+            ->where('is_loanable', true)
+            ->whereDoesntHave('occupancies', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->whereDoesntHave('loanItems', function ($query) use ($exceptLoanId) {
+                $query->whereNotIn('status', ['returned', 'cancelled', 'rejected']);
+                if ($exceptLoanId) {
+                    $query->where('loan_request_id', '!=', $exceptLoanId);
+                }
+                $query->whereHas('request', function ($q) {
+                    $q->whereNotIn('status', ['cancelled', 'rejected', 'completed']);
+                });
+            })
+            ->whereDoesntHave('reservations', function ($query) use ($exceptLoanId) {
+                $query->where('status', 'active');
+                if ($exceptLoanId) {
+                    $query->where(function ($sq) use ($exceptLoanId) {
+                        $sq->whereDoesntHave('loanItem')
+                            ->orWhereHas('loanItem', fn ($liq) => $liq->where('loan_request_id', '!=', $exceptLoanId));
+                    });
+                }
+            })
+            ->whereDoesntHave('workRecords', function ($query) {
+                $query->where('kind', 'incidents')
+                    ->whereIn('status', ['submitted', 'approved']);
+            });
+    }
+
     public function create(Request $request): Response
     {
-        return Inertia::render('Loans/Create', ['submissionKey' => (string) Str::uuid(), 'availableAssets' => $this->scope->assets($request->user())->where('status', 'active')->where('condition', 'Baik')->where('is_loanable', true)->orderBy('name')->get(['id', 'name', 'nup', 'item_code', 'brand_type', 'condition'])]);
+        return Inertia::render('Loans/Create', [
+            'submissionKey' => (string) Str::uuid(),
+            'availableAssets' => $this->getStrictlyAvailableAssetsQuery($request->user())
+                ->orderBy('name')
+                ->get(['id', 'name', 'nup', 'item_code', 'brand_type', 'condition']),
+        ]);
     }
 
     public function availability(Request $request): JsonResponse
     {
-        $data = $request->validate(['asset_ids' => 'required|array|min:1|max:30', 'asset_ids.*' => 'required|uuid|distinct', 'start_date' => 'required|date_format:Y-m-d|after_or_equal:today', 'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date']);
+        $data = $request->validate([
+            'asset_ids' => 'required|array|min:1|max:30',
+            'asset_ids.*' => 'required|uuid|distinct',
+            'start_date' => 'required|date_format:Y-m-d|after_or_equal:today',
+            'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date',
+            'loan_id' => 'nullable|integer',
+        ]);
         abort_if(Carbon::parse($data['start_date'])->diffInDays(Carbon::parse($data['end_date'])) > 92, 422, 'Pemeriksaan jadwal maksimal 93 hari.');
         $assets = $this->scope->assets($request->user())->whereKey($data['asset_ids'])->get();
         abort_unless($assets->count() === count($data['asset_ids']), 403);
-        $result = $assets->mapWithKeys(function ($asset) use ($data) {
+        $exceptLoanId = $data['loan_id'] ?? null;
+        $result = $assets->mapWithKeys(function ($asset) use ($data, $exceptLoanId) {
             $reasons = [];
             if ($asset->status !== 'active' || ! $asset->is_loanable || $asset->condition !== 'Baik') {
                 $reasons[] = 'Tidak layak / tidak diizinkan dipinjam.';
@@ -67,7 +113,21 @@ class LoanController extends Controller
             if (WorkRecord::where('kind', 'incidents')->where('asset_id', $asset->id)->whereIn('status', ['submitted', 'approved'])->exists()) {
                 $reasons[] = 'Tindak lanjut kejadian belum selesai.';
             }
-            $reservations = Reservation::where('asset_id', $asset->id)->where('status', 'active')->where('start_date', '<=', $data['end_date'].' 23:59:59')->where('end_date', '>=', $data['start_date'].' 00:00:00')->get(['start_date', 'end_date']);
+            if ($asset->loanItems()
+                ->whereNotIn('status', ['returned', 'cancelled', 'rejected'])
+                ->when($exceptLoanId, fn ($q) => $q->where('loan_request_id', '!=', $exceptLoanId))
+                ->whereHas('request', fn ($q) => $q->whereNotIn('status', ['cancelled', 'rejected', 'completed']))
+                ->exists()) {
+                $reasons[] = 'Sedang dalam proses pengajuan atau peminjaman aktif.';
+            }
+            $reservations = Reservation::where('asset_id', $asset->id)
+                ->where('status', 'active')
+                ->when($exceptLoanId, function ($q) use ($exceptLoanId) {
+                    $q->whereHas('loanItem', fn ($liq) => $liq->where('loan_request_id', '!=', $exceptLoanId));
+                })
+                ->where('start_date', '<=', $data['end_date'].' 23:59:59')
+                ->where('end_date', '>=', $data['start_date'].' 00:00:00')
+                ->get(['start_date', 'end_date']);
             if ($reservations->isNotEmpty()) {
                 $reasons[] = 'Ada jadwal yang bertumpuk.';
             }
@@ -97,9 +157,11 @@ class LoanController extends Controller
                     return $existing;
                 }
             }
-            $assets = $this->scope->assets($request->user())->whereKey($data['asset_ids'])->where('status', 'active')->where('condition', 'Baik')->where('is_loanable', true)->get();
+            $assets = $this->getStrictlyAvailableAssetsQuery($request->user())
+                ->whereKey($data['asset_ids'])
+                ->get();
             if ($assets->count() !== count($data['asset_ids'])) {
-                throw ValidationException::withMessages(['asset_ids' => 'Ada aset yang tidak tersedia atau tidak berada dalam unit Anda.']);
+                throw ValidationException::withMessages(['asset_ids' => 'Ada aset yang tidak tersedia atau sedang dalam peminjaman/proses pengajuan lain.']);
             }
             $loan = LoanRequest::create([
                 'user_id' => $request->user()->id, 'purpose' => $data['purpose'], 'start_date' => $data['start_date'],
@@ -136,7 +198,13 @@ class LoanController extends Controller
     {
         abort_unless($loan->user_id === $request->user()->id && in_array($loan->status, ['draft', 'revision_requested']), 403);
 
-        return Inertia::render('Loans/Create', ['submissionKey' => $loan->submission_key, 'initialLoan' => [...$loan->toArray(), 'asset_ids' => $loan->items()->pluck('asset_id')], 'availableAssets' => $this->scope->assets($request->user())->where('status', 'active')->where('is_loanable', true)->where('condition', 'Baik')->orderBy('name')->get(['id', 'name', 'nup', 'item_code', 'brand_type', 'condition'])]);
+        return Inertia::render('Loans/Create', [
+            'submissionKey' => $loan->submission_key,
+            'initialLoan' => [...$loan->toArray(), 'asset_ids' => $loan->items()->pluck('asset_id')],
+            'availableAssets' => $this->getStrictlyAvailableAssetsQuery($request->user(), $loan->id)
+                ->orderBy('name')
+                ->get(['id', 'name', 'nup', 'item_code', 'brand_type', 'condition']),
+        ]);
     }
 
     public function update(Request $request, LoanRequest $loan): RedirectResponse
@@ -146,8 +214,10 @@ class LoanController extends Controller
         DB::transaction(function () use ($request, $loan, $data) {
             $locked = LoanRequest::whereKey($loan->id)->lockForUpdate()->firstOrFail();
             abort_unless(in_array($locked->status, ['draft', 'revision_requested']) && $locked->version === $data['version'], 422, 'Pengajuan sudah berubah atau diproses. Muat ulang.');
-            $assets = $this->scope->assets($request->user())->whereKey($data['asset_ids'])->where('status', 'active')->where('is_loanable', true)->where('condition', 'Baik')->get();
-            abort_unless($assets->count() === count($data['asset_ids']), 422, 'Barang tidak tersedia dalam cakupan Anda.');
+            $assets = $this->getStrictlyAvailableAssetsQuery($request->user(), $locked->id)
+                ->whereKey($data['asset_ids'])
+                ->get();
+            abort_unless($assets->count() === count($data['asset_ids']), 422, 'Barang tidak tersedia atau sedang dalam peminjaman/proses pengajuan lain.');
             AuditEvent::record($locked, 'loan.draft_revised', ['previous' => $locked->only(['purpose', 'start_date', 'end_date']), 'asset_ids_before' => $locked->items()->pluck('asset_id')->all()]);
             $locked->items()->whereNotIn('asset_id', $data['asset_ids'])->delete();
             foreach ($assets as $asset) {
@@ -201,20 +271,34 @@ class LoanController extends Controller
         return back()->with('success', 'Pengembalian diajukan. Tunggu pemeriksaan PJ ruangan.');
     }
 
-    public function printBast(Request $request, Bast $bast): \Illuminate\Http\Response
+    public function printBast(Request $request, Bast $bast): BinaryFileResponse
     {
         abort_unless($bast->reference instanceof LoanRequest && $this->scope->viewLoan($request->user(), $bast->reference), 403);
 
-        return Pdf::loadView('pdf.bast', ['bast' => $bast->load(['issuer', 'receiver'])])->stream($bast->bast_number.'.pdf');
+        $path = app(WordTemplateService::class)->generateBastDocument($bast);
+
+        return response()->download($path, $bast->bast_number.'.docx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ])->deleteFileAfterSend(true);
     }
 
     public function document(Request $request, Bast $bast, string $action): mixed
     {
         abort_unless($bast->reference instanceof LoanRequest && $this->scope->viewLoan($request->user(), $bast->reference), 403);
         if ($action === 'download') {
-            abort_unless($bast->scan_status === 'clean' && $bast->signed_pdf_path && Storage::disk('local')->exists($bast->signed_pdf_path), 404);
+            if ($bast->signed_pdf_path) {
+                abort_unless($bast->scan_status === 'clean' && Storage::disk('local')->exists($bast->signed_pdf_path), 404);
 
-            return Storage::disk('local')->download($bast->signed_pdf_path, $bast->bast_number.'-bertanda-tangan.pdf', ['X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, no-store']);
+                return Storage::disk('local')->download($bast->signed_pdf_path, $bast->bast_number.'-bertanda-tangan.pdf', ['X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, no-store']);
+            }
+
+            abort_unless($bast->status === 'verified', 404);
+
+            $path = app(WordTemplateService::class)->generateBastDocument($bast);
+
+            return response()->download($path, $bast->bast_number.'-bertanda-tangan.docx', [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ])->deleteFileAfterSend(true);
         }
         abort_unless(in_array($action, ['upload', 'verify']), 404);
         $path = null;
@@ -246,5 +330,70 @@ class LoanController extends Controller
         }
 
         return back()->with('success', 'Dokumen berhasil diproses.');
+    }
+
+    public function signBast(Request $request, Bast $bast): RedirectResponse
+    {
+        abort_unless($bast->reference instanceof LoanRequest && $this->scope->viewLoan($request->user(), $bast->reference), 403);
+
+        $data = $request->validate([
+            'password' => ['required', 'current_password'],
+            'role' => ['required', Rule::in(['peminjam', 'pj', 'koordinator'])],
+        ]);
+
+        $user = $request->user();
+        $loan = $bast->reference;
+
+        abort_unless(
+            $user->profile?->signature_path && Storage::disk('local')->exists($user->profile->signature_path),
+            422,
+            'Anda belum memiliki tanda tangan tersimpan. Silakan unggah tanda tangan di menu Pengaturan Akun terlebih dahulu.'
+        );
+
+        $role = $data['role'];
+        if ($role === 'peminjam') {
+            abort_unless($loan->user_id === $user->id, 403, 'Hanya peminjam yang berhak menandatangani bagian ini.');
+        } elseif ($role === 'pj') {
+            abort_unless($loan->user_id !== $user->id && $loan->items->contains(fn ($item) => $this->scope->inspect($user, $item->asset)), 403, 'Hanya Penanggung Jawab Ruangan yang berhak menandatangani bagian ini.');
+        } elseif ($role === 'koordinator') {
+            abort_unless($this->scope->decideLoan($user, $loan), 403, 'Hanya Koordinator BMN yang berhak menandatangani bagian ini.');
+        }
+
+        DB::transaction(function () use ($bast, $user, $role) {
+            $locked = Bast::whereKey($bast->id)->lockForUpdate()->firstOrFail();
+            abort_unless(in_array($locked->status, ['draft', 'uploaded']), 422, 'Dokumen BAST sudah berstatus final/terverifikasi.');
+
+            $snapshot = $locked->snapshot ?? [];
+            $signatures = data_get($snapshot, 'signatures', []);
+
+            abort_if(! empty($signatures[$role]), 422, 'Bagian ini sudah Anda tanda tangani.');
+
+            $signatures[$role] = [
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'nip' => $user->profile?->nip,
+                'signed_at' => now()->toIso8601String(),
+            ];
+
+            $snapshot['signatures'] = $signatures;
+            $locked->snapshot = $snapshot;
+
+            $hasPeminjam = ! empty($signatures['peminjam']);
+            $hasPj = ! empty($signatures['pj']);
+            $hasKoor = ! empty($signatures['koordinator']);
+
+            if ($hasPeminjam && $hasPj && $hasKoor) {
+                $locked->status = 'verified';
+                $locked->verified_by = $signatures['koordinator']['user_id'] ?? $user->id;
+                $locked->verified_at = now();
+                $locked->scan_status = 'clean';
+            }
+
+            $locked->save();
+
+            AuditEvent::record($locked, 'document.signed', ['role' => $role, 'signer_id' => $user->id]);
+        });
+
+        return back()->with('success', 'Tanda tangan digital berhasil dibubuhkan pada BAST.');
     }
 }

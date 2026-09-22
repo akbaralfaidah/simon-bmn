@@ -25,22 +25,25 @@ use Inertia\Inertia;
 Route::get('/', fn () => to_route(auth()->check() ? 'dashboard' : 'login'));
 Route::get('/help', fn () => Inertia::render('Help'))->name('help');
 
-Route::middleware(['auth', 'active', 'mfa'])->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/security/sessions', [SessionController::class, 'index'])->name('sessions.index');
     Route::post('/security/sessions/revoke', [SessionController::class, 'revoke'])->middleware('throttle:6,1')->name('sessions.revoke');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile/signature', [ProfileController::class, 'signature'])->name('profile.signature');
+    Route::post('/profile/signature', [ProfileController::class, 'updateSignature'])->middleware('throttle:10,1')->name('profile.signature.update');
+    Route::delete('/profile/signature', [ProfileController::class, 'destroySignature'])->middleware('throttle:10,1')->name('profile.signature.destroy');
 });
 
-Route::middleware(['auth', 'active', 'verified'])->group(function () {
+Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/security/two-factor', [TwoFactorController::class, 'show'])->name('two-factor.show');
     foreach (['enable', 'confirm', 'challenge', 'recovery', 'disable'] as $action) {
         Route::post('/security/two-factor/'.$action, [TwoFactorController::class, $action])->middleware('throttle:6,1')->name('two-factor.'.$action);
     }
 });
 
-Route::middleware(['auth', 'active', 'verified', 'mfa'])->group(function () {
+Route::middleware(['auth', 'active', 'verified'])->group(function () {
     Route::get('/documents', [DocumentCenterController::class, 'index'])->name('documents.index');
     Route::post('/documents', [DocumentCenterController::class, 'store'])->name('documents.store');
     Route::get('/documents/{document}', [DocumentCenterController::class, 'show'])->name('documents.show');
@@ -66,6 +69,7 @@ Route::middleware(['auth', 'active', 'verified', 'mfa'])->group(function () {
     Route::post('/loans/{loan}/actions/{action}', [LoanController::class, 'action'])->name('loans.action');
     Route::get('/basts/{bast}/print', [LoanController::class, 'printBast'])->name('basts.print');
     Route::get('/basts/{bast}/download', [LoanController::class, 'document'])->defaults('action', 'download')->name('basts.download');
+    Route::post('/basts/{bast}/sign', [LoanController::class, 'signBast'])->middleware('throttle:20,1')->name('basts.sign');
     Route::post('/basts/{bast}/{action}', [LoanController::class, 'document'])->whereIn('action', ['upload', 'verify'])->name('basts.action');
 
     Route::post('/assets/{asset}/assign', [CustodyController::class, 'assign'])->name('custody.assign');
@@ -100,6 +104,8 @@ Route::middleware(['auth', 'active', 'verified', 'mfa'])->group(function () {
     Route::get('/administration/placement', [AssetPlacementController::class, 'index'])->name('placement.index');
     Route::post('/administration/placement/{asset}', [AssetPlacementController::class, 'store'])->name('placement.store');
     Route::post('/administration/users/{user}', [AdministrationController::class, 'user'])->name('administration.user');
+    Route::delete('/administration/users/{user}', [AdministrationController::class, 'destroyUser'])->name('administration.user.destroy');
+    Route::post('/administration/assignments/{assignment}/update', [AdministrationController::class, 'updateAssignment'])->name('administration.assignment.update');
     Route::post('/administration/assignments/{assignment}/revoke', [AdministrationController::class, 'revokeAssignment'])->name('administration.assignment.revoke');
     Route::post('/administration/organization/{kind}', [AdministrationController::class, 'organization'])->name('administration.organization');
     Route::get('/imports', [ImportController::class, 'index'])->name('imports.index');

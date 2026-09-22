@@ -178,12 +178,10 @@ class SimonWorkflowTest extends TestCase
         $this->assertDatabaseHas('reservations', ['loan_item_id' => $item->id, 'status' => 'active']);
         $this->authenticatedAs($this->coordinator)->post($this->action($loan, 'close'), ['item_ids' => [$item->id]])->assertSessionHasErrors('workflow');
         $this->authenticatedAs($this->keeper)->post($this->action($loan, 'inspect'), ['item_ids' => [$item->id], 'condition' => 'Rusak Ringan', 'completeness' => 'complete', 'notes' => 'Gores pada casing'])->assertSessionHasNoErrors();
-        $returnDocument = Bast::whereMorphedTo('reference', $loan)->where('bast_type', 'return')->firstOrFail();
+        $this->assertDatabaseMissing('basts', ['reference_id' => $loan->id, 'bast_type' => 'return']);
+        $this->assertSame('needs_repair', $item->fresh()->status);
         $this->authenticatedAs($this->coordinator)->post($this->action($loan, 'close'), ['item_ids' => [$item->id]])->assertSessionHasErrors('workflow');
         $this->assertDatabaseHas('asset_occupancies', ['asset_id' => $this->asset->id, 'is_active' => true]);
-        $this->authenticatedAs($this->employee)->post(route('basts.action', [$returnDocument, 'upload']), ['document' => UploadedFile::fake()->create('pengembalian.pdf', 10, 'application/pdf')])->assertSessionHasNoErrors();
-        $this->authenticatedAs($this->coordinator)->post(route('basts.action', [$returnDocument, 'verify']))->assertSessionHasNoErrors();
-        $this->post($this->action($loan, 'close'), ['item_ids' => [$item->id]])->assertSessionHasErrors('workflow');
         $incident = WorkRecord::where('kind', 'incidents')->firstOrFail();
         $this->assertSame($item->id, $incident->data['loan_item_id']);
         $this->assertNotNull($item->fresh()->inspected_at);
@@ -197,13 +195,19 @@ class SimonWorkflowTest extends TestCase
         $this->assertDatabaseCount('maintenance_logs', 1);
         $this->post(route('records.action', [$incident, 'resolve']), ['version' => $incident->fresh()->version, 'notes' => 'Belum selesai'])->assertUnprocessable();
         $this->authenticatedAs($this->keeper)->post(route('records.action', [$incident, 'inspect-resolution']), ['version' => $incident->fresh()->version, 'condition' => 'Baik', 'notes' => 'Lewati perawatan'])->assertUnprocessable();
-        $this->post(route('maintenance.complete', $maintenance), ['condition' => 'Rusak Ringan', 'notes' => 'Masih ada goresan, sudah diperiksa'])->assertSessionHasNoErrors();
+        $this->post(route('maintenance.complete', $maintenance), ['condition' => 'Baik', 'notes' => 'Sudah diperbaiki, kondisi baik'])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('maintenance_logs', ['id' => $maintenance->id, 'loan_item_id' => $item->id, 'incident_id' => $incident->id, 'inspected_by' => $this->keeper->id, 'status' => 'completed']);
         $this->assertDatabaseHas('asset_occupancies', ['asset_id' => $this->asset->id, 'is_active' => true]);
-        $this->authenticatedAs($this->coordinator)->post(route('records.action', [$incident, 'resolve']), ['version' => $incident->fresh()->version, 'notes' => 'Kondisi aktual disetujui, belum layak dipinjam kembali'])->assertSessionHasNoErrors();
+        $this->authenticatedAs($this->coordinator)->post(route('records.action', [$incident, 'resolve']), ['version' => $incident->fresh()->version, 'notes' => 'Kondisi aktual disetujui'])->assertSessionHasNoErrors();
+
+        $this->authenticatedAs($this->employee)->post($this->action($loan, 'request-return'), ['item_ids' => [$item->id]])->assertSessionHasNoErrors();
+        $this->authenticatedAs($this->keeper)->post($this->action($loan, 'inspect'), ['item_ids' => [$item->id], 'condition' => 'Baik', 'completeness' => 'complete', 'notes' => 'Pemeriksaan ulang setelah perbaikan'])->assertSessionHasNoErrors();
+        $returnDocument = Bast::whereMorphedTo('reference', $loan)->where('bast_type', 'return')->firstOrFail();
+        $this->authenticatedAs($this->employee)->post(route('basts.action', [$returnDocument, 'upload']), ['document' => UploadedFile::fake()->create('pengembalian.pdf', 10, 'application/pdf')])->assertSessionHasNoErrors();
+        $this->authenticatedAs($this->coordinator)->post(route('basts.action', [$returnDocument, 'verify']))->assertSessionHasNoErrors();
         $this->authenticatedAs($this->coordinator)->post($this->action($loan, 'close'), ['item_ids' => [$item->id]])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('loan_requests', ['id' => $loan->id, 'status' => 'completed']);
-        $this->assertDatabaseHas('assets', ['id' => $this->asset->id, 'condition' => 'Rusak Ringan']);
+        $this->assertDatabaseHas('assets', ['id' => $this->asset->id, 'condition' => 'Baik']);
         $this->assertDatabaseMissing('asset_occupancies', ['asset_id' => $this->asset->id, 'is_active' => true]);
         $this->assertDatabaseHas('basts', ['reference_id' => $loan->id, 'bast_type' => 'return', 'status' => 'verified']);
         $this->assertDatabaseHas('audit_events', ['action' => 'loan.close']);
@@ -254,7 +258,10 @@ class SimonWorkflowTest extends TestCase
     public function test_operational_module_pages_render_with_real_queries(): void
     {
         $this->fixtures();
-        $this->authenticatedAs($this->coordinator)->get(route('dashboard'))->assertOk();
+        $this->authenticatedAs($this->coordinator)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->component('Dashboard')->has('stats.account_approvals'));
         foreach (['custody', 'inventory', 'maintenance', 'disposals', 'spip', 'transfers', 'incidents', 'registers', 'documents', 'reports', 'audit', 'notifications'] as $module) {
             $this->get(route('workspace.index', $module))->assertOk()->assertInertia(fn (Assert $page) => $page->component('Operations/Index')->where('module', $module));
         }

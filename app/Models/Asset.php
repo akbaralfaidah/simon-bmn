@@ -48,4 +48,19 @@ class Asset extends Model
     {
         return $this->hasMany(AssetOccupancy::class, 'asset_id');
     }
+
+    public function loanItems(): HasMany
+    {
+        return $this->hasMany(LoanItem::class, 'asset_id');
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class, 'asset_id');
+    }
+
+    public function workRecords(): HasMany
+    {
+        return $this->hasMany(WorkRecord::class, 'asset_id');
+    }
 }

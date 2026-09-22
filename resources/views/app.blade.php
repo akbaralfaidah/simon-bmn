@@ -6,9 +6,14 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
+        <!-- Favicon -->
+        <link rel="icon" type="image/webp" href="{{ asset('images/logo-gakkum.webp') }}">
+        <link rel="shortcut icon" type="image/webp" href="{{ asset('images/logo-gakkum.webp') }}">
+        <link rel="apple-touch-icon" href="{{ asset('images/logo-gakkum.webp') }}">
+
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:300,400,500,600,700,800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700&display=swap" rel="stylesheet" />
 
         <!-- Scripts -->
         @routes

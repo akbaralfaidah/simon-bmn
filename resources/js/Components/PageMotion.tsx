@@ -10,7 +10,7 @@ export default function PageMotion({ children }: PropsWithChildren) {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         import('gsap').then(({ gsap }) => {
             if (cancelled || !element.current) return;
-            const animation = gsap.fromTo(element.current, { opacity: 0.85, y: 4 }, { opacity: 1, y: 0, duration: 0.18, clearProps: 'all' });
+            const animation = gsap.fromTo(element.current, { opacity: 0, y: 10, scale: 0.99 }, { opacity: 1, y: 0, scale: 1, duration: 0.3, ease: 'power2.out', clearProps: 'all' });
             revert = () => animation.revert();
         }).catch(() => { /* Content remains visible when optional animation cannot load. */ });
         return () => { cancelled = true; revert?.(); };
