@@ -2,6 +2,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import Pagination, { Paginated } from '@/Components/Pagination';
 import StatusBadge from '@/Components/StatusBadge';
+import { Plus } from 'lucide-react';
 
 export default function Index({ loans, approvalMode }: { loans: Paginated<any>; approvalMode: boolean }) {
     return (
@@ -16,8 +17,9 @@ export default function Index({ loans, approvalMode }: { loans: Paginated<any>; 
                             Pantau setiap tahap dari draf pengajuan, verifikasi jadwal, serah terima BAST, hingga pengembalian.
                         </p>
                     </div>
-                    <Link href={route('loans.create')} className="simon-button">
-                        + Ajukan Peminjaman
+                    <Link href={route('loans.create')} className="simon-button inline-flex items-center gap-1.5">
+                        <Plus className="h-4 w-4" />
+                        <span>Ajukan Peminjaman</span>
                     </Link>
                 </div>
             }

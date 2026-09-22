@@ -3,6 +3,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { DialogTitle } from '@headlessui/react';
 import { FormEvent, useMemo, useState } from 'react';
 import Modal from '@/Components/Modal';
+import { ArrowLeft, Calendar, Boxes, CheckCircle2 } from 'lucide-react';
 
 type AssetOption = { id: string; name: string; nup: string | null; brand_type: string | null };
 type LoanForm = { submission_key: string; purpose: string; start_date: string; end_date: string; asset_ids: string[]; version: number };
@@ -19,6 +20,12 @@ export default function Create({ availableAssets, submissionKey, initialLoan }: 
     const [step, setStep] = useState(1);
     const [search, setSearch] = useState('');
     const [confirm, setConfirm] = useState(false);
+
+    const stepItems = [
+        { step: 1, label: 'Tujuan & tanggal', icon: Calendar },
+        { step: 2, label: 'Pilih barang', icon: Boxes },
+        { step: 3, label: 'Periksa ringkasan', icon: CheckCircle2 },
+    ];
 
     const filtered = useMemo(() => availableAssets.filter(asset => (asset.name + ' ' + (asset.nup || '')).toLowerCase().includes(search.toLowerCase())), [availableAssets, search]);
     const selected = availableAssets.filter(asset => form.data.asset_ids.includes(asset.id));
@@ -48,13 +55,36 @@ export default function Create({ availableAssets, submissionKey, initialLoan }: 
         <AuthenticatedLayout header={<h1 className="text-2xl font-bold">{initialLoan ? 'Perbaiki draf peminjaman' : 'Ajukan peminjaman BMN'}</h1>}>
             <Head title="Pengajuan peminjaman" />
             <div className="mx-auto max-w-4xl">
-                <Link className="text-sm font-semibold text-[#015850]" href={route('loans.index')}>← Daftar peminjaman</Link>
-                <ol className="my-6 grid grid-cols-3 gap-2" aria-label="Tahap pengajuan">
-                    {['Tujuan & tanggal', 'Pilih barang', 'Periksa ringkasan'].map((label, index) => (
-                        <li key={label} aria-current={step === index + 1 ? 'step' : undefined} className={'rounded-xl border p-3 text-sm ' + (step === index + 1 ? 'border-[#015850] bg-[#015850]/5 font-bold text-[#015850]' : 'border-slate-200 text-slate-500')}>
-                            {index + 1}. {label}
-                        </li>
-                    ))}
+                <Link className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#015850] hover:underline" href={route('loans.index')}>
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Daftar peminjaman</span>
+                </Link>
+                <ol className="my-6 grid grid-cols-3 gap-2 sm:gap-3" aria-label="Tahap pengajuan">
+                    {stepItems.map((item) => {
+                        const ItemIcon = item.icon;
+                        const isCurrent = step === item.step;
+                        const isCompleted = step > item.step;
+                        return (
+                            <li
+                                key={item.step}
+                                aria-current={isCurrent ? 'step' : undefined}
+                                className={`flex items-center gap-2 rounded-xl border p-3 text-xs sm:text-sm transition-all ${
+                                    isCurrent
+                                        ? 'border-[#015850] bg-[#015850]/5 font-bold text-[#015850] ring-1 ring-[#015850]/20'
+                                        : isCompleted
+                                            ? 'border-emerald-200 bg-emerald-50/60 font-medium text-emerald-800'
+                                            : 'border-slate-200 bg-white text-slate-500'
+                                }`}
+                            >
+                                <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md ${
+                                    isCurrent ? 'bg-[#015850] text-white' : isCompleted ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'
+                                }`}>
+                                    <ItemIcon className="h-3.5 w-3.5" />
+                                </div>
+                                <span className="truncate">{item.step}. {item.label}</span>
+                            </li>
+                        );
+                    })}
                 </ol>
                 <form onSubmit={submit}>
                     {step === 1 && (

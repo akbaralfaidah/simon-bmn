@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import MediaGallery from '@/Components/MediaGallery';
 import ActionForm, { Field } from '@/Components/ActionForm';
 import StatusBadge from '@/Components/StatusBadge';
+import { ArrowLeft } from 'lucide-react';
 
 const stages: Record<string, string> = { draft: 'Disposisi', active: 'Pemeriksaan PJ', sub_review: 'Review Subkoordinator', coordinator_review: 'Review Koordinator', head_review: 'Pengesahan Kepala TU', authorized: 'Siap diarsipkan', closed: 'Arsip final' };
 const actions: Record<string, [string, string]> = { draft: ['start', 'Catat disposisi Kepala TU'], active: ['submit', 'Kirim kertas kerja PJ'], sub_review: ['sub-review', 'Catat review Subkoordinator'], coordinator_review: ['coordinate-review', 'Review Koordinator'], head_review: ['authorize', 'Catat pengesahan Kepala TU'] };
@@ -16,7 +17,7 @@ export default function Inventory({ session, canClose, canCheck }: any) {
     const external = next && ['start', 'sub-review', 'authorize'].includes(next[0]);
     const evidence = external || next?.[0] === 'submit';
     const fields: Field[] = [notes, ...(external ? [{ name: 'officer_name', label: 'Nama pejabat pada bukti pengesahan' }] : []), ...(evidence ? [{ name: 'reference_number', label: 'Nomor dokumen / kertas kerja' }, { name: 'signed_date', label: 'Tanggal penandatanganan', type: 'date' as const }, { name: 'document', label: 'Bukti PDF bertanda tangan (maks. 10 MB)', type: 'file' as const }] : [])];
-    return <AuthenticatedLayout header={<><Link className="text-sm text-[#015850]" href={route('workspace.index', 'inventory')}>← Inventarisasi</Link><h1 className="mt-3 text-2xl font-bold">{session.name}</h1></>}>
+    return <AuthenticatedLayout header={<><Link className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#015850] hover:underline" href={route('workspace.index', 'inventory')}><ArrowLeft className="h-4 w-4" /><span>Inventarisasi</span></Link><h1 className="mt-3 text-2xl font-bold">{session.name}</h1></>}>
         <Head title={session.name} />
         <div className="simon-card mb-6">
             <p className="font-semibold">Tahap: {stages[session.status] || session.status}</p>
