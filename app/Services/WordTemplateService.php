@@ -148,7 +148,7 @@ class WordTemplateService
             if ($xml !== false) {
                 $xml = str_replace(
                     'style="width:170px;height:75px"',
-                    'style="position:absolute;z-index:251660300;mso-wrap-style:none;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;margin-top:-15pt;margin-left:360pt;width:170px;height:75px"',
+                    'style="position:absolute;z-index:251660300;mso-wrap-style:none;mso-position-horizontal:center;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;margin-top:6pt;width:170px;height:75px"',
                     $xml
                 );
                 $zip->addFromString('word/document.xml', $xml);
@@ -430,6 +430,9 @@ class WordTemplateService
             $xml
         );
 
+        // Ensure A4 Paper
+        $xml = preg_replace('/<w:pgSz[^>]+>/', '<w:pgSz w:w="11906" w:h="16838" w:code="9"/>', $xml);
+
         preg_match_all('/<w:tr[^>]*>.*?<\/w:tr>/s', $xml, $matches);
         $rows = $matches[0];
 
@@ -491,8 +494,8 @@ class WordTemplateService
             .'    <w:tc><w:tcPr><w:tcW w:w="2800" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:t>${sig_pj_bawah}</w:t></w:r></w:p></w:tc>'
             .'  </w:tr>'
             .'  <w:tr>'
-            .'    <w:tc><w:tcPr><w:tcW w:w="2800" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/><w:rPr><w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style"/><w:sz w:val="18"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style"/><w:sz w:val="18"/></w:rPr><w:t>(${peminjam_kembali})</w:t></w:r></w:p></w:tc>'
-            .'    <w:tc><w:tcPr><w:tcW w:w="2800" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/><w:rPr><w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style"/><w:sz w:val="18"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style"/><w:sz w:val="18"/></w:rPr><w:t>(${pj_kembali})</w:t></w:r></w:p></w:tc>'
+            .'    <w:tc><w:tcPr><w:tcW w:w="2800" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/><w:rPr><w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style"/><w:sz w:val="18"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style"/><w:sz w:val="18"/></w:rPr><w:t>${peminjam_kembali}</w:t></w:r></w:p></w:tc>'
+            .'    <w:tc><w:tcPr><w:tcW w:w="2800" w:type="dxa"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/><w:rPr><w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style"/><w:sz w:val="18"/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:ascii="Bookman Old Style" w:hAnsi="Bookman Old Style"/><w:sz w:val="18"/></w:rPr><w:t>${pj_kembali}</w:t></w:r></w:p></w:tc>'
             .'  </w:tr>'
             .'</w:tbl>';
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Transition, TransitionChild } from '@headlessui/react';
+import { Loader2 } from 'lucide-react';
 
 export default function GlobalLoader() {
     const [loading, setLoading] = useState(false);
@@ -91,10 +92,7 @@ export default function GlobalLoader() {
                                 <img src="/images/logo-gakkum.webp" alt="Gakkum" className="w-7 h-7 object-contain opacity-90 drop-shadow-xs" />
                             </div>
                             {/* Primary spinning outer ring */}
-                            <svg className="animate-spin text-primary w-14 h-14 absolute inset-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-15" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.5"></circle>
-                                <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
+                            <Loader2 className="animate-spin text-primary w-14 h-14 absolute inset-0 stroke-[1.75]" />
                             {/* Subtle gold accent indicator dot */}
                             <div className="absolute top-0 right-1 w-2.5 h-2.5 rounded-full bg-accent ring-2 ring-white shadow-xs"></div>
                         </div>

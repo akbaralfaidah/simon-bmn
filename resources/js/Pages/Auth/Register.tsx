@@ -4,6 +4,7 @@ import InputError from '@/Components/InputError';
 import FlashDialog from '@/Components/FlashDialog';
 import GlobalLoader from '@/Components/GlobalLoader';
 import Modal from '@/Components/Modal';
+import { UserPlus, Info, ShieldCheck, Eye, EyeOff, AlertCircle, AlertTriangle, Check, X, Loader2, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -88,7 +89,7 @@ export default function Register() {
                                 <span className="font-bold text-lg tracking-tight text-slate-900">SIMON</span>
                                 <span className="bg-primary-50 text-primary text-xs font-semibold px-2 py-0.5 rounded">Wilayah Sumatera</span>
                             </div>
-                            <p className="text-xs text-slate-500">Balai Pengamanan & Penegakan Hukum LH Wilayah Sumatera</p>
+                            <p className="text-xs text-slate-500">Balai Penegakan Hukum Lingkungan Hidup Wilayah Sumatera</p>
                         </div>
                     </div>
                     <div className="hidden md:flex items-center gap-4 text-xs text-slate-500">
@@ -104,9 +105,7 @@ export default function Register() {
                     {/* Sisi Kiri: Informasi Verifikasi & Alur Akun */}
                     <div className="lg:col-span-5 space-y-6 pt-2">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary-50 text-primary text-xs font-medium border border-primary-100">
-                            <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
+                            <UserPlus className="w-4 h-4 text-primary" />
                             Registrasi Akun Pegawai Baru
                         </div>
 
@@ -122,9 +121,7 @@ export default function Register() {
                         {/* Tahapan Validasi Info Card */}
                         <div className="border border-slate-200 rounded-xl p-5 bg-white space-y-4 shadow-sm">
                             <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                                <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
+                                <Info className="w-4 h-4 text-primary" />
                                 Alur Pendaftaran & Aktivasi
                             </h2>
 
@@ -156,9 +153,7 @@ export default function Register() {
                         </div>
 
                         <div className="text-xs text-slate-500 flex items-center gap-2 pt-1">
-                            <svg className="w-4 h-4 text-primary shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
+                            <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
                             <span>Dukungan pengelola kata sandi dan autofill peramban diaktifkan.</span>
                         </div>
                     </div>
@@ -282,8 +277,8 @@ export default function Register() {
                                             }}
                                             required
                                             className={`w-full min-h-[40px] px-3.5 py-2 pr-11 border rounded-lg text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:outline-none transition-colors ${passwordFeedback || errors.password
-                                                    ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/20'
-                                                    : 'border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary'
+                                                ? 'border-red-400 focus:border-red-500 focus:ring-1 focus:ring-red-500 bg-red-50/20'
+                                                : 'border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary'
                                                 }`}
                                             placeholder="Masukkan kata sandi"
                                         />
@@ -295,9 +290,9 @@ export default function Register() {
                                             aria-label="Tampilkan atau sembunyikan kata sandi"
                                         >
                                             {showPassword ? (
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                                                <EyeOff className="w-4 h-4" />
                                             ) : (
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                <Eye className="w-4 h-4" />
                                             )}
                                         </button>
                                     </div>
@@ -305,9 +300,7 @@ export default function Register() {
                                     {/* Notifikasi / Error Password belum sesuai ketentuan */}
                                     {(passwordFeedback || errors.password) && (
                                         <div className="mt-2 p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2 animate-in fade-in duration-150">
-                                            <svg className="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                            </svg>
+                                            <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
                                             <span className="font-medium leading-relaxed">
                                                 {passwordFeedback || errors.password}
                                             </span>
@@ -316,7 +309,7 @@ export default function Register() {
 
                                     {capsLockActive && (
                                         <div className="flex items-center gap-1.5 text-xs text-amber-700 font-medium mt-1.5">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                            <AlertTriangle className="w-3.5 h-3.5" />
                                             <span>Caps Lock sedang aktif</span>
                                         </div>
                                     )}
@@ -327,8 +320,8 @@ export default function Register() {
                                             <span className="text-xs font-semibold text-slate-700">Ketentuan Kata Sandi:</span>
                                             {data.password ? (
                                                 <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${isPasswordValid
-                                                        ? 'bg-emerald-100 text-emerald-800'
-                                                        : 'bg-amber-100 text-amber-800'
+                                                    ? 'bg-emerald-100 text-emerald-800'
+                                                    : 'bg-amber-100 text-amber-800'
                                                     }`}>
                                                     {isPasswordValid ? '✓ Sesuai Ketentuan' : 'Belum Sesuai'}
                                                 </span>
@@ -344,16 +337,14 @@ export default function Register() {
                                                     <div
                                                         key={req.id}
                                                         className={`flex items-center gap-1.5 text-xs transition-colors duration-150 ${passed
-                                                                ? 'text-emerald-700 font-medium'
-                                                                : data.password
-                                                                    ? 'text-slate-500'
-                                                                    : 'text-slate-400'
+                                                            ? 'text-emerald-700 font-medium'
+                                                            : data.password
+                                                                ? 'text-slate-500'
+                                                                : 'text-slate-400'
                                                             }`}
                                                     >
                                                         {passed ? (
-                                                            <svg className="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-                                                            </svg>
+                                                            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                                                         ) : (
                                                             <span className="w-3.5 h-3.5 rounded-full border border-slate-300 flex items-center justify-center shrink-0">
                                                                 <span className="w-1 h-1 rounded-full bg-slate-300"></span>
@@ -392,22 +383,22 @@ export default function Register() {
                                             aria-label="Tampilkan atau sembunyikan kata sandi"
                                         >
                                             {showConfirmPassword ? (
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                                                <EyeOff className="w-4 h-4" />
                                             ) : (
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                <Eye className="w-4 h-4" />
                                             )}
                                         </button>
                                     </div>
                                     <InputError message={errors.password_confirmation} className="mt-1.5" />
                                     {data.password && data.password_confirmation && data.password === data.password_confirmation && (
                                         <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1 font-medium">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                            <Check className="w-3.5 h-3.5" />
                                             Kata sandi cocok
                                         </p>
                                     )}
                                     {data.password && data.password_confirmation && data.password !== data.password_confirmation && (
                                         <p className="text-xs text-red-600 mt-1 flex items-center gap-1 font-medium">
-                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            <X className="w-3.5 h-3.5" />
                                             Konfirmasi kata sandi belum cocok
                                         </p>
                                     )}
@@ -432,18 +423,13 @@ export default function Register() {
                                     >
                                         {processing ? (
                                             <>
-                                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
+                                                <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
                                                 <span>Mendaftarkan Akun...</span>
                                             </>
                                         ) : (
                                             <>
                                                 <span>Daftar Akun Pegawai</span>
-                                                <svg className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                                </svg>
+                                                <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5" />
                                             </>
                                         )}
                                     </button>
@@ -473,9 +459,7 @@ export default function Register() {
             >
                 <div className="p-6 sm:p-7 text-center">
                     <div className="w-12 h-12 bg-primary-50 text-primary rounded-full flex items-center justify-center mx-auto mb-3">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        <CheckCircle2 className="w-6 h-6" />
                     </div>
 
                     <span className="text-xs uppercase font-bold tracking-wider text-primary">Registrasi Berhasil</span>

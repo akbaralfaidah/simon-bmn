@@ -4,6 +4,7 @@ import Modal from './Modal';
 import PrimaryButton from './PrimaryButton';
 import SecondaryButton from './SecondaryButton';
 import SuccessMotion from './SuccessMotion';
+import { CheckCircle2, AlertTriangle, XCircle, Info } from 'lucide-react';
 
 interface NotificationDialogProps {
     show: boolean;
@@ -37,13 +38,13 @@ export default function NotificationDialog({
         if (icon) return icon;
         switch (type) {
             case 'success':
-                return <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+                return <CheckCircle2 className="h-6 w-6 text-green-600" />;
             case 'warning':
-                return <svg className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2.25m-6.364.386l1.363-1.364m10.607 1.364l-1.363-1.364M12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+                return <AlertTriangle className="h-6 w-6 text-amber-500" />;
             case 'error':
-                return <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>;
+                return <XCircle className="h-6 w-6 text-red-600" />;
             default:
-                return <svg className="h-6 w-6 text-info" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>;
+                return <Info className="h-6 w-6 text-blue-600" />;
         }
     };
 

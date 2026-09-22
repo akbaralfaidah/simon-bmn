@@ -56,7 +56,7 @@
                                                         SIMON <span style="display: inline-block; font-size: 10px; font-weight: 700; background-color: #ecfdf5; color: #15803d; padding: 2px 8px; border-radius: 4px; border: 1px solid #a7f3d0; margin-left: 4px; text-transform: uppercase;">Sumatera</span>
                                                     </div>
                                                     <div style="font-size: 11px; color: #64748b; font-weight: 500; margin-top: 2px; line-height: 1.3;">
-                                                        Balai Pengamanan & Penegakan Hukum LH Wilayah Sumatera
+                                                        Balai Penegakan Hukum Lingkungan Hidup Wilayah Sumatera
                                                     </div>
                                                 </td>
                                             </tr>
@@ -185,7 +185,7 @@
                                 <tr>
                                     <td style="font-size: 12px; color: #475569; line-height: 1.5; padding-bottom: 12px;">
                                         <strong>Sub Bagian Tata Usaha</strong><br />
-                                        Balai Pengamanan & Penegakan Hukum Lingkungan Hidup Wilayah Sumatera<br />
+                                        Balai Penegakan Hukum Lingkungan Hidup Wilayah Sumatera<br />
                                         <span style="color: #64748b; font-size: 11px;">Jl. Arif Rahman Hakim No. 10, Telanaipura, Kota Jambi, Jambi</span>
                                     </td>
                                 </tr>
